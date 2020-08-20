@@ -12,16 +12,6 @@ type VKConfirmation struct {
 	GroupID		int		`json:"group_id"`
 }
 
-func stripBody(old []byte)[]byte {
-	new := []byte{}
-	for _, b := range old {
-		if b != '\\' {
-			new = append(new, b)
-		}
-	}
-	return new[1:len(new) - 1]
-}
-
 func wrapHandler(handler func(http.ResponseWriter, *http.Request)error)func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(w, r); err != nil {
@@ -37,7 +27,6 @@ func vkTestHandler(w http.ResponseWriter, r *http.Request)error {
 		if err != nil {
 			return err
 		}
-		body = stripBody(body)
 		fmt.Printf("Body: %s\n", string(body))
 		err = json.Unmarshal(body, &vc)
 		if err != nil {
@@ -56,7 +45,5 @@ func vkTestHandler(w http.ResponseWriter, r *http.Request)error {
 
 func main() {
 	http.HandleFunc("/vk", wrapHandler(vkTestHandler))
-	if err := http.ListenAndServe(":8888", nil); err != nil {
-		fmt.Println(err)
-	}
+	fmt.Println(http.ListenAndServe("", nil))
 }
