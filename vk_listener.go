@@ -12,14 +12,6 @@ type VKConfirmation struct {
 	GroupID		int		`json:"group_id"`
 }
 
-func wrapHandler(handler func(http.ResponseWriter, *http.Request)error)func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := handler(w, r); err != nil {
-			fmt.Printf("Error: %s\n", err)
-		}
-	}
-}
-
 func vkTestHandler(w http.ResponseWriter, r *http.Request)error {
 	if r.Method == "POST" {
 		var vc VKConfirmation
@@ -44,6 +36,6 @@ func vkTestHandler(w http.ResponseWriter, r *http.Request)error {
 }
 
 func main() {
-	http.HandleFunc("/vk", wrapHandler(vkTestHandler))
+	http.HandleFunc("/vk", wrapHandler(vkHandler))
 	fmt.Println(http.ListenAndServe("", nil))
 }
