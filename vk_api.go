@@ -91,6 +91,8 @@ func vkHandler(w http.ResponseWriter, r *http.Request)error {
 		return err
 	}
 
+	fmt.Println(string(body))
+
 	_, err = fmt.Fprint(w, "ok")
 	if err != nil {
 		return err
