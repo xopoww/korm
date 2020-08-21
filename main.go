@@ -34,7 +34,9 @@ func main() {
 	vkLogger.Infof("Initialized a VK bot with a token %s", VK_TOKEN)
 
 	http.HandleFunc("/vk", wrapHandler(vkHandler))
-	go vkLogger.Fatalf("Server failed: %s", http.ListenAndServe("", nil))
+	go func(){
+		vkLogger.Fatalf("Server failed: %s", http.ListenAndServe("", nil))
+	}()
 
 	for body := range requestChan {
 		vkLogger.Debug("Got a request from channel.")
