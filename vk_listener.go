@@ -39,6 +39,7 @@ func vkTestHandler(w http.ResponseWriter, r *http.Request)error {
 func main() {
 	VK_TOKEN := os.Getenv("VK_TOKEN")
 	vkBotInstance = &VkBot{VK_TOKEN, VK_API_VERSION}
+	fmt.Printf("Initialized a VK bot with the access token %s.\n", VK_TOKEN)
 
 	http.HandleFunc("/vk", wrapHandler(vkHandler))
 	fmt.Println(http.ListenAndServe("", nil))
