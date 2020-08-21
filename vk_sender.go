@@ -49,6 +49,9 @@ func (b *VkBot) getUser(userID int)(vkUser, error) {
 	if err != nil {
 		return user, err
 	}
+
+	fmt.Println(string(body))
+
 	err = json.Unmarshal(body, &user)
 	if err != nil {
 		return user, err
