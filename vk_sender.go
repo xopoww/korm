@@ -19,6 +19,7 @@ func vkSendRequest(method string, params map[string]interface{}, token, version 
 		paramsString += fmt.Sprintf("%s=%v&", key, value)
 	}
 	url := fmt.Sprintf("%s/%s?%saccess_token=%s&v=%s", VK_API_ADDRESS, method, paramsString, token, version)
+	vkLogger.Debugf("Sending a request: %s", url)
 	return http.Get(url)
 }
 
@@ -47,8 +48,6 @@ func (b *VkBot) getUser(userID int)(vkUser, error) {
 	if err != nil {
 		return vkUser{}, err
 	}
-
-	fmt.Println(string(body))
 	respObj := struct{Response []vkUser `json:"response"`}{}
 	err = json.Unmarshal(body, &respObj)
 	if err != nil {
