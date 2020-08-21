@@ -49,12 +49,11 @@ func (b *VkBot) getUser(userID int)(vkUser, error) {
 	}
 
 	fmt.Println(string(body))
-
-	user := make([]vkUser, 1)
-	err = json.Unmarshal(body, &user)
+	respObj := struct{Response []vkUser `json:"response"`}{}
+	err = json.Unmarshal(body, &respObj)
 	if err != nil {
 		return vkUser{}, err
 	}
-	return user[0], nil
+	return respObj.Response[0], nil
 }
 
