@@ -34,28 +34,27 @@ func (b *VkBot) sendRequest(method string, params map[string]interface{})(*http.
 }
 
 func (b *VkBot) getUser(userID int)(vkUser, error) {
-	var user vkUser
-
 	params := map[string]interface{}{
 		"user_ids": userID,
 		"name_case": "nom",
 	}
 	resp, err := b.sendRequest("users.get", params)
 	if err != nil {
-		return user, err
+		return vkUser{}, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return user, err
+		return vkUser{}, err
 	}
 
 	fmt.Println(string(body))
 
+	user := make([]vkUser, 1)
 	err = json.Unmarshal(body, &user)
 	if err != nil {
-		return user, err
+		return vkUser{}, err
 	}
-	return user, nil
+	return user[0], nil
 }
 
