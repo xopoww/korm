@@ -19,7 +19,7 @@ func vkSendRequest(method string, params map[string]interface{}, token, version 
 		paramsString += fmt.Sprintf("%s=%v&", key, value)
 	}
 	url := fmt.Sprintf("%s/%s?%saccess_token=%s&v=%s", VK_API_ADDRESS, method, paramsString, token, version)
-	vkLogger.Debugf("Sending a request: %s", url)
+	vkLogger.Logf(VERBOSE,"Sending a request: %s", url)
 	return http.Get(url)
 }
 

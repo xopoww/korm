@@ -94,7 +94,7 @@ func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 	}
 
 	vkLogger.Debugf("Got a %s request.", r.Method)
-	vkLogger.Debugf("Body: %s", string(body))
+	vkLogger.Logf(VERBOSE,"Body: %s", string(body))
 
 	_, err = fmt.Fprint(w, "ok")
 	if err != nil {
