@@ -7,9 +7,11 @@ import (
 )
 
 var vkLogger = gologs.NewLogger("VK handler")
+var dbLogger = gologs.NewLogger("SQL handler")
 
 func main() {
 	vkLogger.AddWriter(os.Stdout, gologs.DEBUG)
+	dbLogger.AddWriter(os.Stdout, gologs.DEBUG)
 
 
 	VK_TOKEN := os.Getenv("VK_TOKEN")

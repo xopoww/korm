@@ -86,12 +86,6 @@ type vkUser struct {
 	LastName		string					`json:"last_name"`
 }
 
-// VK API wrappers
-type vkNewMsgWrapper struct {
-	Object			vkMessage				`json:"object"`
-}
-
-
 // main handler for VK Callback API requests
 func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 	body, err := ioutil.ReadAll(r.Body)
@@ -114,7 +108,7 @@ func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 
 	switch reqType {
 	case "message_new":
-		var obj vkNewMsgWrapper
+		var obj struct{Object vkMessage `json:"object"`}
 		err = json.Unmarshal(body, &obj)
 		if err != nil {
 			return err
@@ -139,5 +133,8 @@ func handleNewMessage(bot *VkBot, msg vkMessage)error {
 	}
 
 	vkLogger.Debugf("Message from %s %s:\n%s\n", user.FirstName, user.LastName, msg.Text)
-	return nil
+
+	_, err = fmt.Scanln()
+
+	return err
 }
