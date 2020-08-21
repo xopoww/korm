@@ -97,6 +97,7 @@ func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 	vkLogger.Logf(VERBOSE,"Body: %s", string(body))
 
 	requestChan <- body
+	vkLogger.Debug("Sent a request to the channel.")
 
 	_, err = fmt.Fprint(w, "ok")
 	return err
