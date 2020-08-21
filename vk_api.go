@@ -11,6 +11,8 @@ const (
 	VK_SECRET = "testing"
 )
 
+var vkBotInstance *VkBot
+
 // utils
 func getHeader(r *http.Request, key string)string {
 	if values := r.Header["key"]; len(values) > 0 {
@@ -20,9 +22,9 @@ func getHeader(r *http.Request, key string)string {
 	}
 }
 
-func wrapHandler(handler func(http.ResponseWriter, *http.Request)error)func(http.ResponseWriter, *http.Request) {
+func wrapHandler(handler func(*VkBot, http.ResponseWriter, *http.Request)error)func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := handler(w, r); err != nil {
+		if err := handler(vkBotInstance, w, r); err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
 	}
@@ -49,10 +51,10 @@ func getRequestType(body []byte)(string, error) {
 
 // VK API Types
 type vkMessage struct {
-	ID				int64					`json:"id"`
-	Date			int64					`json:"date"`
+	ID				int						`json:"id"`
+	Date			int						`json:"date"`
 
-	FromID			int64					`json:"from_id"`
+	FromID			int						`json:"from_id"`
 	Text			string					`json:"text"`
 
 	Payload			string					`json:"payload"`
@@ -78,6 +80,12 @@ type vkKeyboardAction struct {
 	Payload			string					`json:"payload"`
 }
 
+type vkUser struct {
+	ID				int						`json:"id"`
+	FirstName		string					`json:"first_name"`
+	LastName		string					`json:"last_name"`
+}
+
 // VK API wrappers
 type vkNewMsgWrapper struct {
 	Object			vkMessage				`json:"object"`
@@ -85,7 +93,7 @@ type vkNewMsgWrapper struct {
 
 
 // main handler for VK Callback API requests
-func vkHandler(w http.ResponseWriter, r *http.Request)error {
+func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return err
@@ -110,7 +118,7 @@ func vkHandler(w http.ResponseWriter, r *http.Request)error {
 		if err != nil {
 			return err
 		}
-		return handleNewMessage(obj.Object)
+		return handleNewMessage(bot, obj.Object)
 
 	case "bad_request":
 		fmt.Println("Got a request with a wrong secret.")
@@ -123,7 +131,12 @@ func vkHandler(w http.ResponseWriter, r *http.Request)error {
 }
 
 // conditional handlers
-func handleNewMessage(msg vkMessage)error {
-	fmt.Printf("Message from user %d:\n%s\n", msg.FromID, msg.Text)
+func handleNewMessage(bot *VkBot, msg vkMessage)error {
+	user, err := bot.getUser(msg.FromID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Message from %s %s:\n%s\n", user.FirstName, user.LastName, msg.Text)
 	return nil
 }

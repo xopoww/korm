@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type VKConfirmation struct {
@@ -36,6 +37,9 @@ func vkTestHandler(w http.ResponseWriter, r *http.Request)error {
 }
 
 func main() {
+	VK_TOKEN := os.Getenv("VK_TOKEN")
+	*vkBotInstance = VkBot{VK_TOKEN, VK_API_VERSION}
+
 	http.HandleFunc("/vk", wrapHandler(vkHandler))
 	fmt.Println(http.ListenAndServe("", nil))
 }
