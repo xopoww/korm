@@ -37,6 +37,7 @@ func main() {
 	go vkLogger.Fatalf("Server failed: %s", http.ListenAndServe("", nil))
 
 	for body := range requestChan {
+		vkLogger.Debug("Got a request from channel.")
 		if err := processRequest(vkBotInstance, body); err != nil {
 			vkLogger.Errorf("Error processing a request: %s", err)
 		}

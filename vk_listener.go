@@ -107,8 +107,7 @@ func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 var requestChan = make(chan []byte, 5)
 
 func processRequest(bot * VkBot, body []byte)error {
-	vkLogger.Debug("Got a request from channel.")
-	
+
 	reqType, err := getRequestType(body)
 	if err != nil {
 		return err
