@@ -135,7 +135,7 @@ func handleNewMessage(bot *VkBot, msg vkMessage)error {
 	vkLogger.Debugf("Message from %s %s:\n%s\n", user.FirstName, user.LastName, msg.Text)
 
 	var test string
-	_, err = fmt.Scan(test)
+	_, err = fmt.Scan(&test)
 	fmt.Printf(">>> %s\n", test)
 
 	return err
