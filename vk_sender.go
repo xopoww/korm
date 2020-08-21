@@ -16,7 +16,7 @@ const (
 func vkSendRequest(method string, params map[string]interface{}, token, version string)(*http.Response, error) {
 	paramsString := ""
 	for key, value := range params {
-		paramsString += fmt.Sprintf("%s=%s&", key, value)
+		paramsString += fmt.Sprintf("%s=%v&", key, value)
 	}
 	url := fmt.Sprintf("%s/%s?%saccess_token=%s&v=%s", VK_API_ADDRESS, method, paramsString, token, version)
 	return http.Get(url)
