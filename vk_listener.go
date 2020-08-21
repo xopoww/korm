@@ -25,7 +25,7 @@ func getHeader(r *http.Request, key string)string {
 func wrapHandler(handler func(*VkBot, http.ResponseWriter, *http.Request)error)func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(vkBotInstance, w, r); err != nil {
-			vkLogger.Errorf("Error: %s\n", err)
+			vkLogger.Errorf("Error handling a request: %s", err)
 		}
 	}
 }
@@ -96,11 +96,16 @@ func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 	vkLogger.Debugf("Got a %s request.", r.Method)
 	vkLogger.Logf(VERBOSE,"Body: %s", string(body))
 
-	_, err = fmt.Fprint(w, "ok")
-	if err != nil {
-		return err
-	}
+	requestChan <- body
 
+	_, err = fmt.Fprint(w, "ok")
+	return err
+}
+
+// request processing
+var requestChan = make(chan []byte, 5)
+
+func processRequest(bot * VkBot, body []byte)error {
 	reqType, err := getRequestType(body)
 	if err != nil {
 		return err

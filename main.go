@@ -34,5 +34,11 @@ func main() {
 	vkLogger.Infof("Initialized a VK bot with a token %s", VK_TOKEN)
 
 	http.HandleFunc("/vk", wrapHandler(vkHandler))
-	vkLogger.Fatalf("Server failed: %s", http.ListenAndServe("", nil))
+	go vkLogger.Fatalf("Server failed: %s", http.ListenAndServe("", nil))
+
+	for body := range requestChan {
+		if err := processRequest(vkBotInstance, body); err != nil {
+			vkLogger.Errorf("Error processing a request: %s", err)
+		}
+	}
 }
