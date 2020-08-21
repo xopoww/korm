@@ -13,7 +13,7 @@ const (
 	VK_API_VERSION = "5.95"
 )
 
-func vkSendRequest(method string, params map[string]string, token, version string)(*http.Response, error) {
+func vkSendRequest(method string, params map[string]interface{}, token, version string)(*http.Response, error) {
 	paramsString := ""
 	for key, value := range params {
 		paramsString += fmt.Sprintf("%s=%s&", key, value)
@@ -29,15 +29,15 @@ type VkBot struct {
 	Version		string
 }
 
-func (b *VkBot) sendRequest(method string, params map[string]string)(*http.Response, error) {
+func (b *VkBot) sendRequest(method string, params map[string]interface{})(*http.Response, error) {
 	return vkSendRequest(method, params, b.Token, b.Version)
 }
 
 func (b *VkBot) getUser(userID int)(vkUser, error) {
 	var user vkUser
 
-	params := map[string]string{
-		"user_ids": string(userID),
+	params := map[string]interface{}{
+		"user_ids": userID,
 		"name_case": "nom",
 	}
 	resp, err := b.sendRequest("users.get", params)
