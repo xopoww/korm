@@ -24,7 +24,7 @@ func main() {
 	} else {
 		lvl = gologs.DEBUG
 	}
-	
+
 	vkLogger.AddWriter(os.Stdout, lvl)
 	//dbLogger.AddWriter(os.Stdout, gologs.DEBUG)
 
