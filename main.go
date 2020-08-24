@@ -89,10 +89,16 @@ func main() {
 	}
 
 	// http and https servers
+	cert, err := tls.LoadX509KeyPair(PEM_PATH, KEY_PATH)
+	if err != nil {
+		panic(err) // TODO FIX
+	}
 	server := http.Server{
 		Addr: "",
 		Handler: nil,
-		TLSConfig: &tls.Config{RootCAs: rootCAs},
+		TLSConfig: &tls.Config{
+			RootCAs: rootCAs,
+			Certificates: []tls.Certificate{ cert }},
 	}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
