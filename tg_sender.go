@@ -83,7 +83,7 @@ func (bot * tgBot) setWebhook(webhookUrl, pemPath string, maxConns int, allowedU
 		return err
 	}
 	if !obj.Ok {
-		return errors.New(fmt.Sprintf("error setting a webhook: %s", obj.Description))
+		return errors.New(obj.Description)
 	}
 	tgLogger.Infof("TG API: %s", obj.Description)
 	return nil

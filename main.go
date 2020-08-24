@@ -44,7 +44,8 @@ func main() {
 	tgLogger.Info("Initialized a TG bot.")
 	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
 	http.HandleFunc("/"+TG_TOKEN, wrapHandler(tgHandler, tgLogger))
-	err := tgBotInstance.setWebhook("35.228.234.83/"+TG_TOKEN, "/home/horoshilov_aa/cert/PUBLIC.pem",
+	err := tgBotInstance.setWebhook("https://35.228.234.83:8443/"+TG_TOKEN,
+		"/home/horoshilov_aa/cert/PUBLIC.pem",
 		40, []string{})
 	if err != nil {
 		tgLogger.Fatalf("Error setting a webhook: %s", err)
