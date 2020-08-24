@@ -13,23 +13,6 @@ const (
 
 var vkBotInstance *VkBot
 
-// utils
-func getHeader(r *http.Request, key string)string {
-	if values := r.Header["key"]; len(values) > 0 {
-		return values[0]
-	} else {
-		return ""
-	}
-}
-
-func wrapHandler(handler func(*VkBot, http.ResponseWriter, *http.Request)error)func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := handler(vkBotInstance, w, r); err != nil {
-			vkLogger.Errorf("Error handling a request: %s", err)
-		}
-	}
-}
-
 // struct for getting the type of the Callback API request
 type apiRequest struct {
 	Type			string					`json:"type"`
@@ -134,16 +117,31 @@ func processRequest(bot * VkBot, body []byte)error {
 
 // conditional handlers
 func handleNewMessage(bot *VkBot, msg vkMessage)error {
-	user, err := bot.getUser(msg.FromID)
+	uid, err := checkVkUser(msg.FromID)
 	if err != nil {
 		return err
 	}
 
-	vkLogger.Debugf("Message from %s %s:\n%s\n", user.FirstName, user.LastName, msg.Text)
+	var user vkUser
+	if uid != 0 {
+		user, err = getVkUser(uid)
+		if err != nil {
+			return err
+		}
+	} else {
+		user, err = bot.getUser(msg.FromID)
+		if err != nil {
+			return err
+		}
+		uid, err = addVkUser(user)
+		if err != nil {
+			return err
+		}
+	}
 
-	var test string
-	_, err = fmt.Scan(&test)
-	fmt.Printf(">>> %s\n", test)
+	vkLogger.Debugf("Message from %s %s: %s", user.FirstName, user.LastName, msg.Text)
+
+	debugBlock()
 
 	return err
 }
