@@ -2,8 +2,10 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	"io/ioutil"
 
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -21,6 +23,7 @@ var (
 const (
 	PEM_PATH = "/home/horoshilov_aa/cert/cert.pem"
 	KEY_PATH = "/home/horoshilov_aa/cert/key.pem"
+	CA_PATH  = "/home/horoshilov_aa/cert/myCA.pem"
 )
 
 
@@ -70,8 +73,21 @@ func main() {
 		return
 	}
 
+	// custom CA
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+	certs, err := ioutil.ReadFile(CA_PATH)
+	if err != nil {
+		panic(err) // TODO FIX
+	}
+	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+		fmt.Println("No certs appended, using system certs only")
+	}
+
 	// http and https servers
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{RootCAs: rootCAs}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
 	go func(){
