@@ -96,11 +96,11 @@ func main() {
 	}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
-	go func(){
+	/*go func(){
 		defer waitGroup.Done()
 		vkLogger.Fatalf("Server failed: %s",
 			server.ListenAndServe())
-	}()
+	}()*/
 	go func(){
 		defer waitGroup.Done()
 		tgLogger.Fatalf("Server failed: %s",
