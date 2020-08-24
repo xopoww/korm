@@ -18,8 +18,8 @@ var (
 )
 
 const (
-	PEM_PATH = "/home/horoshilov_aa/cert/PUBLIC.pem"
-	KEY_PATH = "/home/horoshilov_aa/cert/PRIVATE.key"
+	PEM_PATH = "/home/horoshilov_aa/cert/cert.pem"
+	KEY_PATH = "/home/horoshilov_aa/cert/key.pem"
 )
 
 
