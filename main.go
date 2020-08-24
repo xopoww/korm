@@ -34,7 +34,8 @@ func main() {
 	http.HandleFunc("/vk", wrapHandler(vkHandler, vkLogger))
 
 	// database initialization
-	db, err := sql.Open("sqlite3", dbname)
+	var err error
+	db, err = sql.Open("sqlite3", dbname)
 	if err != nil {
 		dbLogger.Fatalf("Error opening a database: %s", err)
 		return
