@@ -87,7 +87,11 @@ func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
 }
 
 // request processing
-var requestChan = make(chan []byte, 5)
+var requestChan = make(chan []byte, REQUEST_CHAN_SIZE)
+const (
+	REQUEST_PROCESSERS = 5
+	REQUEST_CHAN_SIZE = 25
+)
 
 func processRequest(bot * VkBot, body []byte)error {
 

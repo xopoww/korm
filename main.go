@@ -56,14 +56,16 @@ func main() {
 	}()
 
 	// VK request processing
-	go func() {
-		for body := range requestChan {
-			vkLogger.Debug("Got a request from channel.")
-			if err := processRequest(vkBotInstance, body); err != nil {
-				vkLogger.Errorf("Error processing a request: %s", err)
+	for i := 0; i < REQUEST_PROCESSERS; i++ {
+		go func() {
+			for body := range requestChan {
+				vkLogger.Debug("Got a request from channel.")
+				if err := processRequest(vkBotInstance, body); err != nil {
+					vkLogger.Errorf("Error processing a request: %s", err)
+				}
 			}
-		}
-	}()
+		}()
+	}
 
 	waitGroup.Wait()
 }
