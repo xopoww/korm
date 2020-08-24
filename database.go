@@ -51,7 +51,7 @@ func addVkUser(user vkUser)(int, error) {
 // get a vk user by uid
 func getVkUser(uid int)(vkUser, error) {
 	var user vkUser
-	r, err := db.Query(`SELECT id, FirstName, LastName FROM VkUsers JOIN Users WHERE Users.id = $1`,
+	r, err := db.Query(`SELECT VkUsers.id, FirstName, LastName FROM VkUsers JOIN Users WHERE Users.id = $1`,
 		uid)
 	if err != nil {
 		return user, err
