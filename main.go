@@ -53,7 +53,7 @@ func main() {
 	tgLogger.Info("Initialized a TG bot.")
 	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
 	http.HandleFunc("/"+TG_TOKEN, wrapHandler(tgHandler, tgLogger))
-	err := tgBotInstance.setWebhook("https://35.228.234.83:8443/"+TG_TOKEN,
+	err := tgBotInstance.setWebhook("https://35.228.234.83/"+TG_TOKEN,
 		PEM_PATH,
 		40, []string{})
 	if err != nil {
@@ -87,18 +87,22 @@ func main() {
 	}
 
 	// http and https servers
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{RootCAs: rootCAs}
+	server := http.Server{
+		Addr: "",
+		Handler: nil,
+		TLSConfig: &tls.Config{RootCAs: rootCAs},
+	}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
 	go func(){
 		defer waitGroup.Done()
 		vkLogger.Fatalf("Server failed: %s",
-			http.ListenAndServe("", nil))
+			server.ListenAndServe())
 	}()
 	go func(){
 		defer waitGroup.Done()
 		tgLogger.Fatalf("Server failed: %s",
-			http.ListenAndServeTLS(":8443", PEM_PATH, KEY_PATH, nil))
+			server.ListenAndServeTLS(PEM_PATH, KEY_PATH))
 	}()
 
 	// VK request processing
