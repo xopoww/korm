@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 
@@ -70,6 +71,7 @@ func main() {
 	}
 
 	// http and https servers
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
 	go func(){
