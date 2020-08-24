@@ -70,14 +70,14 @@ type vkUser struct {
 }
 
 // main handler for VK Callback API requests
-func vkHandler(bot *VkBot, w http.ResponseWriter, r *http.Request)error {
+func vkHandler(w http.ResponseWriter, r *http.Request)error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
 
 	vkLogger.Debugf("Got a %s request.", r.Method)
-	vkLogger.Logf(VERBOSE,"Body: %s", string(body))
+	vkLogger.Logf(VERBOSE,"\t body: %s", string(body))
 
 	requestChan <- body
 	vkLogger.Debug("Sent a request to the channel.")

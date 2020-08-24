@@ -11,8 +11,12 @@ import (
 	"sync"
 )
 
-var vkLogger = gologs.NewLogger("VK handler")
-var dbLogger = gologs.NewLogger("SQL handler")
+var (
+	vkLogger = gologs.NewLogger("VK handler")
+	dbLogger = gologs.NewLogger("SQL handler")
+	tgLogger = gologs.NewLogger("TG handler")
+)
+
 
 var VERBOSE = gologs.LogLevel{Value: 5, Label: "VERBOSE"}
 
@@ -24,7 +28,8 @@ func main() {
 		lvl = gologs.DEBUG
 	}
 	vkLogger.AddWriter(os.Stdout, lvl)
-	dbLogger.AddWriter(os.Stdout, gologs.DEBUG)
+	tgLogger.AddWriter(os.Stdout, lvl)
+	dbLogger.AddWriter(os.Stdout, lvl)
 
 	// VK initialization
 	VK_TOKEN := os.Getenv("VK_TOKEN")
@@ -33,8 +38,19 @@ func main() {
 	vkLogger.Logf(VERBOSE, "\ttoken: %s", VK_TOKEN)
 	http.HandleFunc("/vk", wrapHandler(vkHandler, vkLogger))
 
+	// TG initialization
+	TG_TOKEN := os.Getenv("TG_TOKEN")
+	tgBotInstance = &tgBot{TG_TOKEN}
+	tgLogger.Info("Initialized a TG bot.")
+	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
+	http.HandleFunc("/"+TG_TOKEN, wrapHandler(tgHandler, tgLogger))
+	err := tgBotInstance.setWebhook("35.228.234.83/"+TG_TOKEN, "~/cert/PUBLIC.pem", 40,
+		[]string{})
+	if err != nil {
+		tgLogger.Fatalf("Error setting a webhook: %s", err)
+	}
+
 	// database initialization
-	var err error
 	db, err = sql.Open("sqlite3", dbname)
 	if err != nil {
 		dbLogger.Fatalf("Error opening a database: %s", err)
@@ -105,7 +121,7 @@ func getHeader(r *http.Request, key string)string {
 	}
 }
 
-func wrapHandler(handler func(*VkBot, http.ResponseWriter, *http.Request)error, logger gologs.Logger)func(http.ResponseWriter, *http.Request) {
+func wrapHandler(handler func(http.ResponseWriter, *http.Request)error, logger gologs.Logger)func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(vkBotInstance, w, r); err != nil {
 			logger.Errorf("Error handling a request: %s", err)
