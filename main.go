@@ -43,7 +43,7 @@ func main() {
 	tgBotInstance = &tgBot{TG_TOKEN}
 	tgLogger.Info("Initialized a TG bot.")
 	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
-	http.HandleFunc("/"+TG_TOKEN, wrapHandler(tgHandler, tgLogger))
+	http.HandleFunc("/"+TG_TOKEN+":8443", wrapHandler(tgHandler, tgLogger))
 	err := tgBotInstance.setWebhook("https://35.228.234.83:8443/"+TG_TOKEN,
 		"/home/horoshilov_aa/cert/PUBLIC.pem",
 		40, []string{})
