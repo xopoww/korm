@@ -23,7 +23,7 @@ func tgSendRequest(method string, params map[string]interface{}, token string)(*
 	for key, value := range params {
 		paramsString += fmt.Sprintf("%s=%v&", key, value)
 	}
-	url := fmt.Sprintf("%s/%s/%s?%s", TG_API_ADDRESS, token, method, paramsString)
+	url := fmt.Sprintf("%s%s/%s?%s", TG_API_ADDRESS, token, method, paramsString)
 	return http.Get(url)
 }
 
@@ -60,7 +60,7 @@ func (bot * tgBot) setWebhook(webhookUrl, pemPath string, maxConns int, allowedU
 	}
 	paramsString := fmt.Sprintf("url=%s&max_connections=%d&allowed_updates=%s",
 		webhookUrl, maxConns, string(auJsoned))
-	url := fmt.Sprintf("%s/%s/setWebhook?%s", TG_API_ADDRESS, bot.token, paramsString)
+	url := fmt.Sprintf("%s%s/setWebhook?%s", TG_API_ADDRESS, bot.token, paramsString)
 	tgLogger.Logf(VERBOSE, "Webhook request: %s", url)
 
 	req, err := http.NewRequest("POST", url, &buf)
