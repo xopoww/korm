@@ -17,6 +17,11 @@ var (
 	tgLogger = gologs.NewLogger("TG handler")
 )
 
+const (
+	PEM_PATH = "/home/horoshilov_aa/cert/PUBLIC.pem"
+	KEY_PATH = "/home/horoshilov_aa/cert/PRIVATE.key"
+)
+
 
 var VERBOSE = gologs.LogLevel{Value: 5, Label: "VERBOSE"}
 
@@ -44,8 +49,8 @@ func main() {
 	tgLogger.Info("Initialized a TG bot.")
 	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
 	http.HandleFunc("/"+TG_TOKEN, wrapHandler(tgHandler, tgLogger))
-	err := tgBotInstance.setWebhook("https://35.228.234.83/"+TG_TOKEN,
-		"/home/horoshilov_aa/cert/PUBLIC.pem",
+	err := tgBotInstance.setWebhook("https://35.228.234.83:8443/"+TG_TOKEN,
+		PEM_PATH,
 		40, []string{})
 	if err != nil {
 		tgLogger.Fatalf("Error setting a webhook: %s", err)
@@ -64,12 +69,18 @@ func main() {
 		return
 	}
 
-	// http server
+	// http and https servers
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
 	go func(){
 		defer waitGroup.Done()
-		vkLogger.Fatalf("Server failed: %s", http.ListenAndServe("", nil))
+		vkLogger.Fatalf("Server failed: %s",
+			http.ListenAndServe("", nil))
+	}()
+	go func(){
+		defer waitGroup.Done()
+		tgLogger.Fatalf("Server failed: %s",
+			http.ListenAndServeTLS(":8443", PEM_PATH, KEY_PATH, nil))
 	}()
 
 	// VK request processing

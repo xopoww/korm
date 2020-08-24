@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+const (
+	TG_PORT = 8443
+)
+
 func tgHandler(w http.ResponseWriter, r *http.Request)error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
