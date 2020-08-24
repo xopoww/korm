@@ -19,8 +19,8 @@ var (
 )
 
 const (
-	PEM_PATH = "/home/horoshilov_aa/cert/cert.pem"
-	KEY_PATH = "/home/horoshilov_aa/cert/key.pem"
+	PEM_PATH = "/home/horoshilov_aa/cert/server.pem"
+	KEY_PATH = "/home/horoshilov_aa/cert/server.key"
 )
 
 
