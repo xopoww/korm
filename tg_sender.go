@@ -61,6 +61,7 @@ func (bot * tgBot) setWebhook(webhookUrl, pemPath string, maxConns int, allowedU
 	paramsString := fmt.Sprintf("url=%s&max_connections=%d&allowed_updates=%s",
 		webhookUrl, maxConns, string(auJsoned))
 	url := fmt.Sprintf("%s/%s/setWebhook?%s", TG_API_ADDRESS, bot.token, paramsString)
+	tgLogger.Logf(VERBOSE, "Webhook request: %s", url)
 
 	req, err := http.NewRequest("POST", url, &buf)
 	if err != nil {
