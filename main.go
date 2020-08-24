@@ -84,6 +84,8 @@ func main() {
 	}
 	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
 		fmt.Println("No certs appended, using system certs only")
+	} else {
+		fmt.Println("Custom CA appended")
 	}
 
 	// http and https servers
