@@ -123,7 +123,7 @@ func getHeader(r *http.Request, key string)string {
 
 func wrapHandler(handler func(http.ResponseWriter, *http.Request)error, logger gologs.Logger)func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := handler(vkBotInstance, w, r); err != nil {
+		if err := handler(w, r); err != nil {
 			logger.Errorf("Error handling a request: %s", err)
 		}
 	}

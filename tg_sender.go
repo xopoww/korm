@@ -2,16 +2,14 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"go/ast"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
-	"encoding/json"
-	"mime/multipart"
 )
 
 const (
