@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 
@@ -10,6 +9,11 @@ import (
 	"net/http"
 	"os"
 	"sync"
+)
+
+const (
+	PEM_PATH = "/etc/ssl/certs/server.crt"
+	KEY_PATH = "/etc/ssl/certs/server.key"
 )
 
 var (
