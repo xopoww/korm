@@ -2,10 +2,8 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"io/ioutil"
 
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -19,13 +17,6 @@ var (
 	dbLogger = gologs.NewLogger("SQL handler")
 	tgLogger = gologs.NewLogger("TG handler")
 )
-
-const (
-	PEM_PATH = "/home/horoshilov_aa/cert/cert.pem"
-	KEY_PATH = "/home/horoshilov_aa/cert/key.pem"
-	CA_PATH  = "/home/horoshilov_aa/cert/myCA.pem"
-)
-
 
 var VERBOSE = gologs.LogLevel{Value: 5, Label: "VERBOSE"}
 
@@ -50,15 +41,14 @@ func main() {
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
 	tgBotInstance = &tgBot{TG_TOKEN}
-	tgLogger.Info("Initialized a TG bot.")
-	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
-	http.HandleFunc("/"+TG_TOKEN, wrapHandler(tgHandler, tgLogger))
-	err := tgBotInstance.setWebhook("https://35.228.234.83/"+TG_TOKEN,
+	err := tgBotInstance.setWebhook("https://35.228.234.83:8443/"+TG_TOKEN,
 		PEM_PATH,
 		40, []string{})
 	if err != nil {
 		tgLogger.Fatalf("Error setting a webhook: %s", err)
 	}
+	tgLogger.Info("Initialized a TG bot.")
+	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
 
 	// database initialization
 	db, err = sql.Open("sqlite3", dbname)
@@ -73,44 +63,17 @@ func main() {
 		return
 	}
 
-	// custom CA
-	rootCAs, _ := x509.SystemCertPool()
-	if rootCAs == nil {
-		rootCAs = x509.NewCertPool()
-	}
-	certs, err := ioutil.ReadFile(CA_PATH)
-	if err != nil {
-		panic(err) // TODO FIX
-	}
-	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-		fmt.Println("No certs appended, using system certs only")
-	} else {
-		fmt.Println("Custom CA appended")
-	}
-
-	// http and https servers
-	cert, err := tls.LoadX509KeyPair(PEM_PATH, KEY_PATH)
-	if err != nil {
-		panic(err) // TODO FIX
-	}
-	server := http.Server{
-		Addr: "",
-		Handler: nil,
-		TLSConfig: &tls.Config{
-			RootCAs: rootCAs,
-			Certificates: []tls.Certificate{ cert }},
-	}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
-	/*go func(){
+	go func(){
 		defer waitGroup.Done()
 		vkLogger.Fatalf("Server failed: %s",
-			server.ListenAndServe())
-	}()*/
+			http.ListenAndServe("", nil))
+	}()
 	go func(){
 		defer waitGroup.Done()
 		tgLogger.Fatalf("Server failed: %s",
-			server.ListenAndServeTLS(PEM_PATH, KEY_PATH))
+			http.ListenAndServeTLS(":8443", PEM_PATH, KEY_PATH, nil))
 	}()
 
 	// VK request processing
