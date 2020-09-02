@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -23,7 +24,7 @@ func checkUser(id int, vk bool)(int, error) {
 		xNet = "TG"
 	}
 
-	r, err := db.Query(`SELECT id FROM Users WHERE $1 = $2`, xID, id)
+	r, err := db.Query(fmt.Sprintf(`SELECT id FROM Users WHERE %s = $2`, xID), id)
 	if err != nil {
 		return 0, err
 	}
