@@ -64,7 +64,7 @@ func addVkUser(user *vkUser)(int, error) {
 
 // adds tg user
 func addTgUser(user *tb.User)(int, error) {
-	_, err := db.Exec(`INSERT INTO "tgUsers" (FirstName, LastName, Username,  id) VALUES ($1, $2, $3, $4)`,
+	_, err := db.Exec(`INSERT INTO "TgUsers" (FirstName, LastName, Username, id) VALUES ($1, $2, $3, $4)`,
 		user.FirstName, user.LastName, user.Username, user.ID)
 	if err != nil {
 		return 0, err
