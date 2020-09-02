@@ -3,8 +3,6 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	tb "gopkg.in/tucnak/telebot.v2"
-	"time"
 
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -66,7 +64,7 @@ func main() {
 		vkLogger.Fatalf("Server failed: %s",
 			http.ListenAndServe("", nil))
 	}()
-	
+
 	go tgBot.Start()
 
 
