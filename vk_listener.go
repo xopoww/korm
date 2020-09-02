@@ -121,7 +121,7 @@ func processRequest(bot * VkBot, body []byte)error {
 
 // conditional handlers
 func handleNewMessage(bot *VkBot, msg vkMessage)error {
-	uid, err := checkVkUser(msg.FromID)
+	uid, err := checkUser(msg.FromID, true)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func handleNewMessage(bot *VkBot, msg vkMessage)error {
 		if err != nil {
 			return err
 		}
-		uid, err = addVkUser(user)
+		uid, err = addVkUser(&user)
 		if err != nil {
 			return err
 		}

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	//"math/rand"
 
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -39,7 +40,7 @@ func main() {
 
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
-	tgBot, err := tg_init(TG_TOKEN)
+	tgBot, err := tgInit(TG_TOKEN)
 	if err != nil {
 		tgLogger.Fatalf("Error initializing telebot: %s", err)
 	}
@@ -67,7 +68,6 @@ func main() {
 
 	go tgBot.Start()
 
-
 	// VK request processing
 	for i := 0; i < REQUEST_PROCESSERS; i++ {
 		go func() {
@@ -83,12 +83,17 @@ func main() {
 	waitGroup.Wait()
 }
 
+// messages
+const (
+	ReplyOnError = "У меня что-то сломалось( Попробуйте ещё раз позже."
+)
+
 // utils
 
 func debugBlock() {
 	var test string
 	fmt.Println("Blocked.")
-	fmt.Scanln(&test)
+	_, _ = fmt.Scanln(&test)
 	fmt.Printf("Unblocked: %s\n", test)
 }
 
@@ -125,3 +130,19 @@ func wrapHandler(handler func(http.ResponseWriter, *http.Request)error, logger g
 		}
 	}
 }
+
+/*
+const (
+	alphabet = "qwertyuiopasdfghjklzxcvbnm1234567890"
+	KEY_LEN = 15
+)
+func generateKeyString(length int)string {
+	if length <= 0 {
+		panic("length must be positive")
+	}
+	key := make([]rune, length)
+	for i := 0; i < length; i++ {
+		key[i] = []rune(alphabet)[rand.Int() % len(alphabet)]
+	}
+	return string(key)
+}*/
