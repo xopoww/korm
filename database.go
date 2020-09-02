@@ -23,7 +23,7 @@ func checkUser(id int, vk bool)(int, error) {
 		xNet = "TG"
 	}
 
-	r, err := db.Query(`SELECT id FROM Users WHERE tgID = $2`, xID, id)
+	r, err := db.Query(`SELECT id FROM Users WHERE $1 = $2`, xID, id)
 	if err != nil {
 		return 0, err
 	}
@@ -36,6 +36,8 @@ func checkUser(id int, vk bool)(int, error) {
 		}
 		dbLogger.Debugf("Checked a %s user with id %d: exists", xNet, id)
 		return uid, nil
+	} else if err = r.Err(); err != nil {
+		return 0, err
 	}
 	dbLogger.Debugf("Checked a %s user with id %d: doesn't exist", xNet, id)
 	return 0, nil
