@@ -23,7 +23,7 @@ func checkUser(id int, vk bool)(int, error) {
 		xNet = "TG"
 	}
 
-	r, err := db.Query(`SELECT id FROM "Users" WHERE $1 = $2`, xID, id)
+	r, err := db.Query(`SELECT id FROM Users WHERE $1 = $2`, xID, id)
 	if err != nil {
 		return 0, err
 	}
