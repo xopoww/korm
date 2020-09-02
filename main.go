@@ -3,17 +3,14 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	tb "gopkg.in/tucnak/telebot.v2"
+	"time"
 
 	"fmt"
 	"github.com/xopoww/gologs"
 	"net/http"
 	"os"
 	"sync"
-)
-
-const (
-	PEM_PATH = "/etc/ssl/certs/server.crt"
-	KEY_PATH = "/etc/ssl/certs/server.key"
 )
 
 var (
@@ -44,15 +41,10 @@ func main() {
 
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
-	tgBotInstance = &tgBot{TG_TOKEN}
-	err := tgBotInstance.setWebhook("https://35.228.234.83:8443/"+TG_TOKEN,
-		PEM_PATH,
-		40, []string{})
+	tgBot, err := tg_init(TG_TOKEN)
 	if err != nil {
-		tgLogger.Fatalf("Error setting a webhook: %s", err)
+		tgLogger.Fatalf("Error initializing telebot: %s", err)
 	}
-	tgLogger.Info("Initialized a TG bot.")
-	tgLogger.Logf(VERBOSE, "\ttoken: %s", TG_TOKEN)
 
 	// database initialization
 	db, err = sql.Open("sqlite3", dbname)
@@ -74,11 +66,9 @@ func main() {
 		vkLogger.Fatalf("Server failed: %s",
 			http.ListenAndServe("", nil))
 	}()
-	go func(){
-		defer waitGroup.Done()
-		tgLogger.Fatalf("Server failed: %s",
-			http.ListenAndServeTLS(":8443", PEM_PATH, KEY_PATH, nil))
-	}()
+	
+	go tgBot.Start()
+
 
 	// VK request processing
 	for i := 0; i < REQUEST_PROCESSERS; i++ {
