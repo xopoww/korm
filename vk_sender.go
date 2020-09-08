@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/url"
 )
 
 const (
@@ -19,9 +20,9 @@ func vkSendRequest(method string, params map[string]interface{}, token, version 
 	for key, value := range params {
 		paramsString += fmt.Sprintf("%s=%v&", key, value)
 	}
-	url := fmt.Sprintf("%s/%s?%saccess_token=%s&v=%s", VK_API_ADDRESS, method, paramsString, token, version)
-	vkLogger.Logf(VERBOSE,"Sending a request: %s", url)
-	return http.Get(url)
+	URL := fmt.Sprintf("%s/%s?%saccess_token=%s&v=%s", VK_API_ADDRESS, method, paramsString, token, version)
+	vkLogger.Logf(VERBOSE,"Sending a request: %s", URL)
+	return http.Get(URL)
 }
 
 
@@ -61,7 +62,7 @@ func (b *VkBot) sendMessage(to int, msg string)error {
 	params := map[string]interface{}{
 		"user_id": to,
 		"random_id": rand.Uint32(),
-		"message": msg,//url.QueryEscape(msg),
+		"message": url.QueryEscape(msg),
 	}
 	resp, err := b.sendRequest("messages.send", params)
 	if err != nil {
