@@ -1,13 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-
-	"errors"
-	"encoding/json"
-	"net/http"
 	"math/rand"
+	"net/http"
 )
 
 const (
@@ -62,7 +61,7 @@ func (b *VkBot) sendMessage(to int, msg string)error {
 	params := map[string]interface{}{
 		"user_id": to,
 		"random_id": rand.Uint32(),
-		"message": msg,
+		"message": msg,//url.QueryEscape(msg),
 	}
 	resp, err := b.sendRequest("messages.send", params)
 	if err != nil {
@@ -78,6 +77,7 @@ func (b *VkBot) sendMessage(to int, msg string)error {
 	if err != nil {
 		return err
 	}
+	vkLogger.Logf(VERBOSE, "Response body: %s", body)
 	err = json.Unmarshal(body, &respObj)
 	if err != nil {
 		return err
