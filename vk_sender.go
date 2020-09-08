@@ -58,9 +58,9 @@ func (b *VkBot) getUser(userID int)(vkUser, error) {
 	return respObj.Response[0], nil
 }
 
-func (b *VkBot) sendMessage(to vkUser, msg string)error {
+func (b *VkBot) sendMessage(to int, msg string)error {
 	params := map[string]interface{}{
-		"user_id": to.ID,
+		"user_id": to,
 		"random_id": rand.Uint32(),
 		"message": msg,
 	}
