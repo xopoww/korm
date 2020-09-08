@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	//"math/rand"
+	"math/rand"
 
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -57,6 +57,7 @@ func main() {
 		dbLogger.Fatalf("Error initializing a database: %s", err)
 		return
 	}
+	oldKeysEraser()
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
@@ -131,7 +132,6 @@ func wrapHandler(handler func(http.ResponseWriter, *http.Request)error, logger g
 	}
 }
 
-/*
 const (
 	alphabet = "qwertyuiopasdfghjklzxcvbnm1234567890"
 	KEY_LEN = 15
@@ -145,4 +145,4 @@ func generateKeyString(length int)string {
 		key[i] = []rune(alphabet)[rand.Int() % len(alphabet)]
 	}
 	return string(key)
-}*/
+}

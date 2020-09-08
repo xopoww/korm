@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	tb "gopkg.in/tucnak/telebot.v2"
+	"errors"
+	"time"
 )
 
 var (
@@ -24,7 +26,7 @@ func checkUser(id int, vk bool)(int, error) {
 		xNet = "TG"
 	}
 
-	r, err := db.Query(fmt.Sprintf(`SELECT id FROM Users WHERE %s = $2`, xID), id)
+	r, err := db.Query(fmt.Sprintf(`SELECT id FROM Users WHERE %s = $1`, xID), id)
 	if err != nil {
 		return 0, err
 	}
@@ -101,7 +103,7 @@ func getVkUser(uid int)(vkUser, error) {
 	return user, err
 }
 
-/*
+
 // checks if the user is already synced
 func isSynced(id int, vk bool)(bool, error) {
 	toID, fromID := "vkID", "tgID"
@@ -109,7 +111,7 @@ func isSynced(id int, vk bool)(bool, error) {
 		toID, fromID = fromID, toID
 	}
 
-	r, err := db.Query(`SELECT $1 FROM Users WHERE $2 = $3`, toID, fromID, id)
+	r, err := db.Query(fmt.Sprintf(`SELECT %s FROM Users WHERE %s = $1`, toID, fromID), id)
 	if err != nil {
 		return false, err
 	}
@@ -136,7 +138,7 @@ func getSyncKey(id int, vk bool)(string, error) {
 	if vk {
 		vkInt = 1
 	}
-	r, err := db.Query(`SELECT SyncKey FROM Syncro WHERE id = $1 AND fromVK = $2`, id, vkInt)
+	r, err := db.Query(`SELECT SyncKey FROM Synchro WHERE id = $1 AND fromVK = $2`, id, vkInt)
 	if err != nil {
 		return "", err
 	}
@@ -163,7 +165,7 @@ func setSyncKey(id int, vk bool, key string)error {
 		vkInt = 1
 	}
 
-	_, err := db.Exec(`INSERT INTO "Syncro" (id, fromVK, SyncKey) VALUES ($1, $2, $3)`,
+	_, err := db.Exec(`INSERT INTO "Synchro" (id, fromVK, SyncKey) VALUES ($1, $2, $3)`,
 		id, vkInt, key)
 	if err == nil {
 		dbLogger.Debugf("Set a sync key for %s %d", fromID, id)
@@ -187,7 +189,7 @@ func mergeUsers(tgID, vkID int) error {
 		return err
 	}
 	if vkUID == 0 {
-		return errors.New(fmt.Sprintf("VK User with id %d does not exist", tgID))
+		return errors.New(fmt.Sprintf("VK User with id %d does not exist", vkID))
 	}
 
 	// replace vk UID with tg UID
@@ -212,12 +214,12 @@ DELETE FROM Users WHERE id = $3;
 // returns a pair (id, fromVK) if the key exists
 // returns (0, false) otherwise
 func getIdByKey(key string)(int, bool, error){
-	r, err := db.Query(`SELECT id, fromVK FROM Syncro WHERE SyncKey = $1`, key)
+	r, err := db.Query(`SELECT id, fromVK FROM Synchro WHERE SyncKey = $1`, key)
 	if err != nil {
 		return 0, false, err
 	}
 	if !r.Next() {
-		dbLogger.Debug("Didn't find a key in Syncro table")
+		dbLogger.Debug("Didn't find a key in Synchro table")
 		return 0, false, nil
 	}
 	var id, vkInt int
@@ -225,10 +227,36 @@ func getIdByKey(key string)(int, bool, error){
 	if err != nil {
 		return 0, false, err
 	}
-	dbLogger.Debug("Found a key in Syncro table")
+	dbLogger.Debug("Found a key in Synchro table")
 	return id, vkInt != 0, nil
 }
-*/
+
+const SyncKeyDuration = time.Minute * 5
+var keysToErase = make(chan string, 100)
+func oldKeysEraser() {
+	// goroutine that picks keys from chan
+	// and starts child goroutines
+	go func() {
+		for key := range keysToErase {
+			// child goroutine that sleeps
+			// and removes the key
+			go func(key string){
+				time.Sleep(SyncKeyDuration)
+				r, err := db.Exec(`DELETE FROM Synchro WHERE SyncKey = $1`, key)
+				if err != nil {
+					dbLogger.Errorf("Error deleting a sync key: %s", err)
+					return
+				}
+				if nRows, _ := r.RowsAffected(); nRows != 0 {
+					dbLogger.Debugf("Deleted a key %s", key)
+				} else {
+					dbLogger.Debugf("Key already deleted: %s", key)
+				}
+			}(key)
+		}
+	}()
+	dbLogger.Info("Started oldKeysEraser")
+}
 
 const (
 	dbCreation = `
@@ -254,8 +282,7 @@ CREATE TABLE IF NOT EXISTS "Users" (
 	FOREIGN KEY("vkID") REFERENCES "VkUsers"("id"),
 	FOREIGN KEY("tgID") REFERENCES "TgUsers"("id")
 );
-`
-/*
+
 CREATE TABLE IF NOT EXISTS "Orders" (
 	id			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 	UID			INTEGER NOT NULL,
@@ -265,13 +292,12 @@ CREATE TABLE IF NOT EXISTS "Orders" (
 	FOREIGN KEY("UID") REFERENCES "Users"("id")
 );
 
-CREATE TABLE IF NOT EXISTS "Syncro" (
+CREATE TABLE IF NOT EXISTS "Synchro" (
 	id		INTEGER NOT NULL,
 	fromVK	INTEGER,
 	SyncKey	TEXT NOT NULL UNIQUE
 );
 `
- */
 
 
 	dbname = "./korm.db"

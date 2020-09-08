@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"errors"
 	"encoding/json"
 	"net/http"
+	"math/rand"
 )
 
 const (
@@ -56,3 +58,33 @@ func (b *VkBot) getUser(userID int)(vkUser, error) {
 	return respObj.Response[0], nil
 }
 
+func (b *VkBot) sendMessage(to vkUser, msg string)error {
+	params := map[string]interface{}{
+		"user_id": to.ID,
+		"random_id": rand.Uint32(),
+		"message": msg,
+	}
+	resp, err := b.sendRequest("messages.send", params)
+	if err != nil {
+		return err
+	}
+	var(
+		body []byte
+		respObj struct{
+			Error string `json:"error"`
+		}
+	)
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, &respObj)
+	if err != nil {
+		return err
+	}
+	if respObj.Error == "" {
+		return nil
+	} else {
+		return errors.New(fmt.Sprintf("vk api error: %s", respObj.Error))
+	}
+}

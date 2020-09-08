@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -120,18 +121,21 @@ func processRequest(bot * VkBot, body []byte)error {
 }
 
 // conditional handlers
-func handleNewMessage(bot *VkBot, msg vkMessage)error {
+func onStart(bot *VkBot, msg vkMessage)error {
 	uid, err := checkUser(msg.FromID, true)
 	if err != nil {
 		return err
 	}
-
-	var user vkUser
+	var (
+		user vkUser
+		reply string
+	)
 	if uid != 0 {
 		user, err = getVkUser(uid)
 		if err != nil {
 			return err
 		}
+		reply = fmt.Sprintf("Снова здравствуй, %s!", user.FirstName)
 	} else {
 		user, err = bot.getUser(msg.FromID)
 		if err != nil {
@@ -141,11 +145,36 @@ func handleNewMessage(bot *VkBot, msg vkMessage)error {
 		if err != nil {
 			return err
 		}
+		reply = fmt.Sprintf("Привет, %s!", user.FirstName)
+	}
+	vkLogger.Debugf("/start used by %s %s", user.FirstName, user.LastName)
+	err = bot.sendMessage(msg.FromID, fmt.Sprintf(reply))
+	return err
+}
+
+func handleNewMessage(bot *VkBot, msg vkMessage)error {
+	if msg.Text[0:1] == "/" {
+		command, _/*payload*/ := getCommand(msg.Text)
+		switch command {
+		case "start":
+			return onStart(bot, msg)
+		default:
+			return bot.sendMessage(msg.FromID, fmt.Sprintf("Неизвестная команда: %s", command))
+		}
 	}
 
-	vkLogger.Debugf("Message from %s %s: %s", user.FirstName, user.LastName, msg.Text)
+	vkLogger.Infof("Message from user (id: %d): %s", msg.FromID, msg.Text)
+	return nil
+}
 
-	debugBlock()
+// utils
 
-	return err
+// parse message text in the format
+// "/{COMMAND} {PAYLOAD}"
+func getCommand(text string)(string, string) {
+	output := strings.SplitN(text[1:], " ", 2)
+	if len(output) > 1 {
+		return output[0], output[1]
+	}
+	return output[0], ""
 }

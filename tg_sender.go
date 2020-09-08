@@ -42,7 +42,6 @@ func tgInit(token string)(*tb.Bot, error) {
 		tgLogger.Debugf("/start used by %s %s", m.Sender.FirstName, m.Sender.LastName)
 	})
 
-	/*
 	// synchronize profiles
 	bot.Handle("/sync", func(m *tb.Message) {
 		// check if the accounts are already synchronized
@@ -68,8 +67,10 @@ func tgInit(token string)(*tb.Bot, error) {
 			}
 			tgLogger.Infof("Emitted a sync key for user (id %d)", m.Sender.ID)
 			bot.Send(m.Sender,
-				fmt.Sprintf("Ключ для синхронизации:\n`%s`\nПришлите этот ключ в течение 24 часов боту вк.",
-					genKey), tb.ModeMarkdownV2)
+				fmt.Sprintf("Ключ для синхронизации:\n`%s`\nПришлите этот ключ в течение 5 минут боту вк.",
+					genKey),
+					tb.ModeMarkdownV2)
+			keysToErase <- genKey
 			return
 		} else {
 			// check the sent key
@@ -98,7 +99,6 @@ func tgInit(token string)(*tb.Bot, error) {
 			return
 		}
 	})
-	 */
 
 	return bot, nil
 }
