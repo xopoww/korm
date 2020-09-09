@@ -146,3 +146,8 @@ func generateKeyString(length int)string {
 	}
 	return string(key)
 }
+
+func randEmoji()string {
+	emojis := []string{"\U0001f643","\U0001f609","\U0001f914","\U0001f596","\U0001f60a","\U0001f642","\U0000261d"}
+	return emojis[rand.Int() % len(emojis)]
+}
