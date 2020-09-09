@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"strings"
 )
@@ -152,6 +153,7 @@ func onStart(bot *VkBot, msg vkMessage)error {
 	return err
 }
 
+var emojis = []string{"\U0001f643","\U0001f609","\U0001f914","\U0001f596","\U0001f60a","\U0001f642","\U0000261d"}
 func handleNewMessage(bot *VkBot, msg vkMessage)error {
 	if msg.Text[0:1] == "/" {
 		command, _/*payload*/ := getCommand(msg.Text)
@@ -163,6 +165,11 @@ func handleNewMessage(bot *VkBot, msg vkMessage)error {
 		}
 	}
 
+	reply := emojis[rand.Int() % len(emojis)]
+	err := bot.sendMessage(msg.FromID, reply)
+	if err != nil {
+		return err
+	}
 	vkLogger.Infof("Message from user (id: %d): %s", msg.FromID, msg.Text)
 	return nil
 }
