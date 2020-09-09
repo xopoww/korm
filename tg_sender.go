@@ -100,5 +100,11 @@ func tgInit(token string)(*tb.Bot, error) {
 		}
 	})
 
+	// just text
+	bot.Handle(tb.OnText, func(m *tb.Message) {
+		bot.Send(m.Sender, randEmoji())
+		tgLogger.Debugf("Message from %s %s: %s", m.Sender.FirstName, m.Sender.LastName, m.Text)
+	})
+
 	return bot, nil
 }
