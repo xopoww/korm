@@ -258,6 +258,15 @@ func oldKeysEraser() {
 	dbLogger.Info("Started oldKeysEraser")
 }
 
+
+// get the preferred locale for user
+func getUserLocale(id int, vk bool)messages{
+	// TODO: locale selection and DB query here
+	id = 0
+	vk = false
+	return locales["RU"].Messages
+}
+
 const (
 	dbCreation = `
 CREATE TABLE IF NOT EXISTS "VkUsers" (

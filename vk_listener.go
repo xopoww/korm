@@ -121,7 +121,7 @@ func processRequest(bot * VkBot, body []byte)error {
 }
 
 // conditional handlers
-func onStart(bot *VkBot, msg vkMessage)error {
+func onStart(bot *VkBot, msg vkMessage, Messages messages)error {
 	uid, err := checkUser(msg.FromID, true)
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func onStart(bot *VkBot, msg vkMessage)error {
 		if err != nil {
 			return err
 		}
-		reply = fmt.Sprintf("Снова здравствуй, %s!", user.FirstName)
+		reply = fmt.Sprintf(Messages.HelloAgain, user.FirstName)
 	} else {
 		user, err = bot.getUser(msg.FromID)
 		if err != nil {
@@ -145,21 +145,23 @@ func onStart(bot *VkBot, msg vkMessage)error {
 		if err != nil {
 			return err
 		}
-		reply = fmt.Sprintf("Привет, %s!", user.FirstName)
+		reply = fmt.Sprintf(Messages.Hello, user.FirstName)
 	}
 	vkLogger.Debugf("/start used by %s %s", user.FirstName, user.LastName)
-	err = bot.sendMessage(msg.FromID, fmt.Sprintf(reply))
+	err = bot.sendMessage(msg.FromID, reply)
 	return err
 }
 
 func handleNewMessage(bot *VkBot, msg vkMessage)error {
+	Messages := getUserLocale(msg.FromID, true)
+
 	if msg.Text[0:1] == "/" {
 		command, _/*payload*/ := getCommand(msg.Text)
 		switch command {
 		case "start":
-			return onStart(bot, msg)
+			return onStart(bot, msg, Messages)
 		default:
-			return bot.sendMessage(msg.FromID, fmt.Sprintf("Неизвестная команда: %s", command))
+			return bot.sendMessage(msg.FromID, fmt.Sprintf(Messages.UnknownCommand, command))
 		}
 	}
 

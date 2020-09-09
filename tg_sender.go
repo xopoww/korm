@@ -19,21 +19,23 @@ func tgInit(token string)(*tb.Bot, error) {
 
 	// on start
 	bot.Handle("/start", func(m *tb.Message) {
+		Messages := getUserLocale(m.Sender.ID, false)
+
 		var reply string
 		uid, err := checkUser(m.Sender.ID, false)
 		if err != nil {
 			tgLogger.Errorf("Error checking a TG user (id %d): %s", m.Sender.ID, err)
-			reply = ReplyOnError
+			reply = Messages.Error
 		} else if uid == 0 {
 			// new user
 			_, err = addTgUser(m.Sender)
 			if err != nil {
 				tgLogger.Errorf("Error adding a TG user: %s", err)
 			}
-			reply = fmt.Sprintf("Привет, %s!", m.Sender.FirstName)
+			reply = fmt.Sprintf(Messages.Hello, m.Sender.FirstName)
 		} else {
 			// already seen user
-			reply = fmt.Sprintf("Снова здравствуй, %s!", m.Sender.FirstName)
+			reply = fmt.Sprintf(Messages.HelloAgain, m.Sender.FirstName)
 		}
 		_, err = bot.Send(m.Sender, reply)
 		if err != nil {
@@ -44,15 +46,17 @@ func tgInit(token string)(*tb.Bot, error) {
 
 	// synchronize profiles
 	bot.Handle("/sync", func(m *tb.Message) {
+		Messages := getUserLocale(m.Sender.ID, false)
+
 		// check if the accounts are already synchronized
 		already, err := isSynced(m.Sender.ID, false)
 		if err != nil {
 			tgLogger.Errorf("Error checking if user (id %d) is synced: %s", m.Sender.ID, err)
-			bot.Send(m.Sender, ReplyOnError)
+			bot.Send(m.Sender, Messages.Error)
 			return
 		}
 		if already {
-			bot.Send(m.Sender, "Аккаунт уже синхронизован!")
+			bot.Send(m.Sender, Messages.AlreadySynced)
 			return
 		}
 
@@ -62,14 +66,12 @@ func tgInit(token string)(*tb.Bot, error) {
 			err = setSyncKey(m.Sender.ID, false, genKey)
 			if err != nil {
 				tgLogger.Errorf("Error setting a sync key for user (id %d): %s", m.Sender.ID, err)
-				bot.Send(m.Sender, ReplyOnError)
+				bot.Send(m.Sender, Messages.Error)
 				return
 			}
 			tgLogger.Infof("Emitted a sync key for user (id %d)", m.Sender.ID)
 			bot.Send(m.Sender,
-				fmt.Sprintf("Ключ для синхронизации:\n`%s`\nПришлите этот ключ в течение 5 минут боту вк.",
-					genKey),
-					tb.ModeMarkdownV2)
+				fmt.Sprintf(Messages.EmitKeyTG, genKey), tb.ModeMarkdownV2)
 			keysToErase <- genKey
 			return
 		} else {
@@ -77,24 +79,24 @@ func tgInit(token string)(*tb.Bot, error) {
 			id, fromVK, err := getIdByKey(m.Payload)
 			if err != nil {
 				tgLogger.Errorf("Error checking a key %s: %s", m.Payload, err)
-				bot.Send(m.Sender, ReplyOnError)
+				bot.Send(m.Sender, Messages.Error)
 				return
 			}
 			if id == 0 {
 				// unknown key
-				bot.Send(m.Sender, "Неизвестный ключ!")
+				bot.Send(m.Sender, Messages.UnknownKey)
 				return
 			}
 			if !fromVK {
 				// the key was emitted from TG
-				bot.Send(m.Sender,"Ключ надо прислать боту ВК!")
+				bot.Send(m.Sender,Messages.SendToVK)
 				return
 			}
 			// key is good => merge the accounts
 			err = mergeUsers(m.Sender.ID, id)
 			if err != nil {
 				tgLogger.Errorf("Error merging users (tgID %d; vkID %d): %s", m.Sender.ID, id, err)
-				bot.Send(m.Sender, ReplyOnError)
+				bot.Send(m.Sender, Messages.Error)
 			}
 			return
 		}
@@ -102,7 +104,14 @@ func tgInit(token string)(*tb.Bot, error) {
 
 	// just text
 	bot.Handle(tb.OnText, func(m *tb.Message) {
-		bot.Send(m.Sender, randEmoji())
+		Messages := getUserLocale(m.Sender.ID, false)
+
+		if m.Text[0:1] == "/" {
+			command, _ := getCommand(m.Text)
+			bot.Send(m.Sender, fmt.Sprintf(Messages.UnknownCommand, command))
+		} else {
+			bot.Send(m.Sender, randEmoji())
+		}
 		tgLogger.Debugf("Message from %s %s: %s", m.Sender.FirstName, m.Sender.LastName, m.Text)
 	})
 

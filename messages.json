@@ -1,0 +1,36 @@
+{
+  "EN": {
+    "messages": {
+      "error": "",
+      "unknown_command": "",
+
+      "hello": "",
+      "hello_again": "",
+
+      "already_synced": "",
+      "emit_key_tg": "",
+      "emit_key_vk": "",
+      "send_to_vk": "",
+      "send_to_tg": "",
+      "unknown_key": ""
+    },
+    "repr": "\uD83C\uDDEC\uD83C\uDDE7"
+},
+  "RU": {
+    "messages": {
+      "error": "У меня что-то пошло не так, попробуй обратиться ко мне позже \uD83D\uDE41",
+      "unknown_command": "Неизвестная команда: %s",
+
+      "hello": "Привет, %s!",
+      "hello_again": "Снова здравствуй, %s!",
+
+      "already_synced": "Аккаунт уже синхронизован!",
+      "emit_key_tg": "Ключ для синхронизации:\n`%s`\nПришли этот ключ в течение 5 минут боту Вконтакте.",
+      "emit_key_vk": "Ключ для синхронизации:\n%s\nПришли этот ключ в течение 5 минут боту в Telegram.",
+      "send_to_vk": "Ключ надо прислать боту Вконтакте!",
+      "send_to_tg": "Ключ надо прислать боту в Telegram!",
+      "unknown_key": "Неизвестный ключ!"
+    },
+    "repr": "\uD83C\uDDF7\uD83C\uDDFA"
+  }
+}

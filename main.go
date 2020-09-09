@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	_ "github.com/mattn/go-sqlite3"
+	"io/ioutil"
 	"math/rand"
 
 	"fmt"
@@ -18,6 +20,8 @@ var (
 	tgLogger = gologs.NewLogger("TG handler")
 )
 
+var locales map[string]locale
+
 var VERBOSE = gologs.LogLevel{Value: 5, Label: "VERBOSE"}
 
 func main() {
@@ -30,6 +34,13 @@ func main() {
 	vkLogger.AddWriter(os.Stdout, lvl)
 	tgLogger.AddWriter(os.Stdout, lvl)
 	dbLogger.AddWriter(os.Stdout, lvl)
+
+	// messages from JSON
+	var err error
+	locales, err = loadMessages()
+	if err != nil {
+		panic(err)
+	}
 
 	// VK initialization
 	VK_TOKEN := os.Getenv("VK_TOKEN")
@@ -83,11 +94,6 @@ func main() {
 
 	waitGroup.Wait()
 }
-
-// messages
-const (
-	ReplyOnError = "У меня что-то сломалось( Попробуйте ещё раз позже."
-)
 
 // utils
 
@@ -150,4 +156,46 @@ func generateKeyString(length int)string {
 func randEmoji()string {
 	emojis := []string{"\U0001f643","\U0001f609","\U0001f914","\U0001f596","\U0001f60a","\U0001f642","\U0000261d"}
 	return emojis[rand.Int() % len(emojis)]
+}
+
+// messages
+
+type messages struct {
+	// common
+	Error			string		`json:"error"`
+	UnknownCommand	string		`json:"unknown_command"`
+	// start
+	Hello			string		`json:"hello"`
+	HelloAgain		string		`json:"hello_again"`
+	// sync
+	AlreadySynced	string		`json:"already_synced"`
+	EmitKeyTG		string		`json:"emit_key_tg"`
+	EmitKeyVK		string		`json:"emit_key_vk"`
+	SendToVK		string		`json:"send_to_vk"`
+	SendToTG		string		`json:"send_to_tg"`
+	UnknownKey		string		`json:"unknown_key"`
+}
+
+type locale struct {
+	Repr			string		`json:"repr"`
+	Messages		messages	`json:"messages"`
+}
+
+const messagesFile = "messages.json"
+func loadMessages()(map[string]locale, error) {
+	file, err := os.Open(messagesFile)
+	if err != nil {
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var locales map[string]locale
+	err = json.Unmarshal(data, &locales)
+	if err != nil {
+		return nil, err
+	}
+	return locales, nil
 }
