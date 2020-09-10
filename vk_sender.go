@@ -60,6 +60,9 @@ func vkLogic(bot * vk.Bot) {
 			reply = randEmoji()
 		}
 		bot.Logger.Debugf("Message from user (id %d): %s", m.FromID, m.Text)
-		bot.SendMessage(m.FromID, reply)
+		err := bot.SendMessage(m.FromID, reply)
+		if err != nil {
+			bot.Logger.Errorf("Error sending a message: %s", err)
+		}
 	})
 }
