@@ -6,7 +6,7 @@ import (
 )
 
 func vkLogic(bot * vk.Bot) {
-	// on Start
+	// on start
 	bot.HandleOnCommand("start", func(m * vk.Message){
 		Messages := getUserLocale(m.FromID, true)
 
@@ -51,7 +51,7 @@ func vkLogic(bot * vk.Bot) {
 
 
 	// just text
-	bot.HandleOnText(func(m * vk.Message){
+	bot.HandleDefault(func(m * vk.Message){
 		Messages := getUserLocale(m.FromID, true)
 
 		var reply string
