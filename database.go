@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	vk "github.com/xopoww/vk_min_api"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"errors"
 	"time"
@@ -47,7 +48,7 @@ func checkUser(id int, vk bool)(int, error) {
 }
 
 // adds vk user
-func addVkUser(user *vkUser)(int, error) {
+func addVkUser(user *vk.User)(int, error) {
 	_, err := db.Exec(`INSERT INTO "vkUsers" (FirstName, LastName, id) VALUES ($1, $2, $3)`,
 		user.FirstName, user.LastName, user.ID)
 	if err != nil {
@@ -91,8 +92,8 @@ func addTgUser(user *tb.User)(int, error) {
 }
 
 // get a vk user by uid
-func getVkUser(uid int)(vkUser, error) {
-	var user vkUser
+func getVkUser(uid int)(vk.User, error) {
+	var user vk.User
 	r, err := db.Query(`SELECT VkUsers.id, FirstName, LastName FROM VkUsers JOIN Users WHERE Users.id = $1`,
 		uid)
 	if err != nil {

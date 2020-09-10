@@ -1,91 +1,65 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
-	"math/rand"
-	"net/http"
-	"net/url"
+	vk "github.com/xopoww/vk_min_api"
 )
 
-const (
-	VK_API_ADDRESS = "https://api.vk.com/method"
-	VK_API_VERSION = "5.95"
-)
+func vkLogic(bot * vk.Bot) {
+	// on Start
+	bot.HandleOnCommand("start", func(m * vk.Message){
+		Messages := getUserLocale(m.FromID, true)
 
-func vkSendRequest(method string, params map[string]interface{}, token, version string)(*http.Response, error) {
-	paramsString := ""
-	for key, value := range params {
-		paramsString += fmt.Sprintf("%s=%v&", key, value)
-	}
-	URL := fmt.Sprintf("%s/%s?%saccess_token=%s&v=%s", VK_API_ADDRESS, method, paramsString, token, version)
-	vkLogger.Logf(VERBOSE,"Sending a request: %s", URL)
-	return http.Get(URL)
-}
-
-
-// VK bot class
-type VkBot struct {
-	Token		string
-	Version		string
-}
-
-func (b *VkBot) sendRequest(method string, params map[string]interface{})(*http.Response, error) {
-	return vkSendRequest(method, params, b.Token, b.Version)
-}
-
-func (b *VkBot) getUser(userID int)(vkUser, error) {
-	params := map[string]interface{}{
-		"user_ids": userID,
-		"name_case": "nom",
-	}
-	resp, err := b.sendRequest("users.get", params)
-	if err != nil {
-		return vkUser{}, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return vkUser{}, err
-	}
-	respObj := struct{Response []vkUser `json:"response"`}{}
-	err = json.Unmarshal(body, &respObj)
-	if err != nil {
-		return vkUser{}, err
-	}
-	return respObj.Response[0], nil
-}
-
-func (b *VkBot) sendMessage(to int, msg string)error {
-	params := map[string]interface{}{
-		"user_id": to,
-		"random_id": rand.Uint32(),
-		"message": url.QueryEscape(msg),
-	}
-	resp, err := b.sendRequest("messages.send", params)
-	if err != nil {
-		return err
-	}
-	var(
-		body []byte
-		respObj struct{
-			Error string `json:"error"`
+		uid, err := checkUser(m.FromID, true)
+		if err != nil {
+			bot.Logger.Errorf("Error checking user: %s", err)
+			return
 		}
-	)
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	vkLogger.Logf(VERBOSE, "Response body: %s", body)
-	err = json.Unmarshal(body, &respObj)
-	if err != nil {
-		return err
-	}
-	if respObj.Error == "" {
-		return nil
-	} else {
-		return errors.New(fmt.Sprintf("vk api error: %s", respObj.Error))
-	}
+		var (
+			user vk.User
+			reply string
+		)
+
+		if uid != 0 {
+			// seen this user
+			user, err = getVkUser(uid)
+			if err != nil {
+				bot.Logger.Errorf("Error getting vk user from DB: %s", err)
+				return
+			}
+			reply = fmt.Sprintf(Messages.HelloAgain, user.FirstName)
+		} else {
+			// new user
+			user, err = bot.GetUserByID(m.FromID)
+			if err != nil {
+				bot.Logger.Errorf("Error getting vk user: %s", err)
+				return
+			}
+			uid, err = addVkUser(&user)
+			if err != nil {
+				bot.Logger.Errorf("Error adding vk user to DB: %s", err)
+				return
+			}
+			reply = fmt.Sprintf(Messages.Hello, user.FirstName)
+		}
+		bot.Logger.Debugf("/start used by %s %s", user.FirstName, user.LastName)
+		err = bot.SendMessage(m.FromID, reply)
+		if err != nil {
+			bot.Logger.Errorf("Error sending a message: %s", err)
+		}
+	})
+
+	// just text
+	bot.HandleOnText(func(m * vk.Message){
+		Messages := getUserLocale(m.FromID, true)
+
+		var reply string
+		if com := m.Command(); com != "" {
+			reply = fmt.Sprintf(Messages.UnknownCommand, com)
+		} else {
+			reply = randEmoji()
+		}
+		bot.Logger.Debugf("Message from user (id %d): %s", m.FromID, m.Text)
+		bot.SendMessage(m.FromID, reply)
+	})
 }

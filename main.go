@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	_ "github.com/mattn/go-sqlite3"
+	vk "github.com/xopoww/vk_min_api"
 	"io/ioutil"
 	"math/rand"
 
@@ -44,10 +45,18 @@ func main() {
 
 	// VK initialization
 	VK_TOKEN := os.Getenv("VK_TOKEN")
-	vkBotInstance = &VkBot{VK_TOKEN, VK_API_VERSION}
-	vkLogger.Info("Initialized a VK bot.")
-	vkLogger.Logf(VERBOSE, "\ttoken: %s", VK_TOKEN)
-	http.HandleFunc("/vk", wrapHandler(vkHandler, vkLogger))
+	vkBot, err := vk.NewBot(
+		vk.Properties{
+			Token: VK_TOKEN,
+			Version: "5.95",
+			Secret: "testing",
+		},
+		false, &vkLogger)
+	if err != nil {
+		vkLogger.Fatalf("error initializing vk bot: %s", err)
+	}
+	vkLogic(vkBot)
+	http.HandleFunc("/vk", vkBot.HTTPHandler())
 
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
@@ -79,18 +88,10 @@ func main() {
 	}()
 
 	go tgBot.Start()
-
-	// VK request processing
-	for i := 0; i < REQUEST_PROCESSERS; i++ {
-		go func() {
-			for body := range requestChan {
-				vkLogger.Debug("Got a request from channel.")
-				if err := processRequest(vkBotInstance, body); err != nil {
-					vkLogger.Errorf("Error processing a request: %s", err)
-				}
-			}
-		}()
-	}
+	go func(){
+		vkBot.Start()
+		waitGroup.Done()
+	}()
 
 	waitGroup.Wait()
 }
