@@ -49,6 +49,7 @@ func vkLogic(bot * vk.Bot) {
 		}
 	})
 
+	/*
 	// just text
 	bot.HandleOnText(func(m * vk.Message){
 		Messages := getUserLocale(m.FromID, true)
@@ -65,4 +66,6 @@ func vkLogic(bot * vk.Bot) {
 			bot.Logger.Errorf("Error sending a message: %s", err)
 		}
 	})
+
+	 */
 }
