@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	tb "gopkg.in/tucnak/telebot.v2"
+	"regexp"
 	"time"
 )
 
@@ -106,14 +107,24 @@ func tgInit(token string)(*tb.Bot, error) {
 	bot.Handle(tb.OnText, func(m *tb.Message) {
 		Messages := getUserLocale(m.Sender.ID, false)
 
-		if m.Text[0:1] == "/" {
-			command, _ := getCommand(m.Text)
-			bot.Send(m.Sender, fmt.Sprintf(Messages.UnknownCommand, command))
+		var reply string
+		if com := getCommand(m.Text); com != "" {
+			reply = fmt.Sprintf(Messages.UnknownCommand, com)
 		} else {
-			bot.Send(m.Sender, randEmoji())
+			reply = randEmoji()
 		}
+		bot.Send(m.Sender, reply)
 		tgLogger.Debugf("Message from %s %s: %s", m.Sender.FirstName, m.Sender.LastName, m.Text)
 	})
 
 	return bot, nil
+}
+
+func getCommand(text string)string {
+	re := regexp.MustCompile("/[^ ]+")
+	match := re.Find([]byte(text))
+	if len(match) > 1 {
+		return string(match[1:])
+	}
+	return ""
 }
