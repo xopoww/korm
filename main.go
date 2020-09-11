@@ -7,6 +7,7 @@ import (
 	vk "github.com/xopoww/vk_min_api"
 	"io/ioutil"
 	"math/rand"
+	"time"
 
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -26,6 +27,8 @@ var locales map[string]locale
 var VERBOSE = gologs.LogLevel{Value: 5, Label: "VERBOSE"}
 
 func main() {
+	rand.Seed(time.Now().Unix())
+
 	var lvl gologs.LogLevel
 	if getAnswer("Would you like a verbose debug logging?") {
 		lvl = VERBOSE
@@ -161,7 +164,7 @@ func randEmoji()string {
 
 // messages
 
-type messages struct {
+type messageTemplates struct {
 	// common
 	Error			string		`json:"error"`
 	UnknownCommand	string		`json:"unknown_command"`
@@ -179,7 +182,7 @@ type messages struct {
 
 type locale struct {
 	Repr			string		`json:"repr"`
-	Messages		messages	`json:"messages"`
+	Messages		messageTemplates	`json:"messages"`
 }
 
 const messagesFile = "messages.json"

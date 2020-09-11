@@ -2,10 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	vk "github.com/xopoww/vk_min_api"
-	tb "gopkg.in/tucnak/telebot.v2"
-	"errors"
 	"time"
 )
 
@@ -47,16 +46,26 @@ func checkUser(id int, vk bool)(int, error) {
 	return 0, nil
 }
 
-// adds vk user
-func addVkUser(user *vk.User)(int, error) {
-	_, err := db.Exec(`INSERT INTO "vkUsers" (FirstName, LastName, id) VALUES ($1, $2, $3)`,
-		user.FirstName, user.LastName, user.ID)
+/* Add the user to the database
+On success returns the uid of the user added, else returns 0 and error.
+ */
+func addUser(user * User, vk bool)(int, error) {
+	var table, idName string
+	if vk {
+		table = "TgUsers"
+		idName = "tgID"
+	} else {
+		table = "VkUsers"
+		idName = "vkID"
+	}
+
+	query := fmt.Sprintf(`INSERT INTO "%s" (FirstName, LastName, id) VALUES ($1, $2, $3)`, table)
+	_, err := db.Exec(query, user.FirstName, user.LastName, user.ID)
 	if err != nil {
 		return 0, err
 	}
 
-	ra, err := db.Exec(`INSERT INTO "Users" (vkID) VALUES ($1)`,
-		user.ID)
+	ra, err := db.Exec(fmt.Sprintf(`INSERT INTO "Users" (%s) VALUES ($1)`, idName), user.ID)
 	if err != nil {
 		return 0, err
 	}
@@ -65,29 +74,6 @@ func addVkUser(user *vk.User)(int, error) {
 		return 0, err
 	}
 
-	dbLogger.Debugf("Added a new vkUser with id %d", user.ID)
-	return int(uid), nil
-}
-
-// adds tg user
-func addTgUser(user *tb.User)(int, error) {
-	_, err := db.Exec(`INSERT INTO "TgUsers" (FirstName, LastName, Username, id) VALUES ($1, $2, $3, $4)`,
-		user.FirstName, user.LastName, user.Username, user.ID)
-	if err != nil {
-		return 0, err
-	}
-
-	ra, err := db.Exec(`INSERT INTO "Users" (tgID) VALUES ($1)`,
-		user.ID)
-	if err != nil {
-		return 0, err
-	}
-	uid, err := ra.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-
-	dbLogger.Debugf("Added a new tgUser with id %d", user.ID)
 	return int(uid), nil
 }
 
