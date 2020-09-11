@@ -48,7 +48,7 @@ func main() {
 
 	// VK initialization
 	VK_TOKEN := os.Getenv("VK_TOKEN")
-	vkBot, err := vk.NewBot(
+	vbot, err := vk.NewBot(
 		vk.Properties{
 			Token: VK_TOKEN,
 			Version: "5.95",
@@ -58,15 +58,17 @@ func main() {
 	if err != nil {
 		vkLogger.Fatalf("error initializing vk bot: %s", err)
 	}
-	vkLogic(vkBot)
-	http.HandleFunc("/vk", vkBot.HTTPHandler())
+	http.HandleFunc("/vk", vbot.HTTPHandler())
 
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
-	tgBot, err := tgInit(TG_TOKEN)
+	tbot, err := tgInit(TG_TOKEN)
 	if err != nil {
 		tgLogger.Fatalf("Error initializing telebot: %s", err)
 	}
+
+	// abstract bot inits
+	AddHandlers(&vkBot{vbot}, &tgBot{tbot}) // TODO: <---------------------------------------------------------
 
 	// database initialization
 	db, err = sql.Open("sqlite3", dbname)
@@ -90,9 +92,9 @@ func main() {
 			http.ListenAndServe("", nil))
 	}()
 
-	go tgBot.Start()
+	go tbot.Start()
 	go func(){
-		vkBot.Start()
+		vbot.Start()
 		waitGroup.Done()
 	}()
 

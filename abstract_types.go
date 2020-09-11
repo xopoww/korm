@@ -24,8 +24,6 @@ type Bot interface {
 	addUser(user * User)(uid int, err error)
 	getUser(uid int)(User, error)
 	getUserLocale(id int)*messageTemplates
-
-	Start()
 }
 
 type tgBot struct {
@@ -72,6 +70,10 @@ func (b *tgBot) getUser(uid int) (User, error) {
 	panic("implement me")
 }
 
+func (b *tgBot) getUserLocale(id int) *messageTemplates {
+	return getUserLocale(id, false)
+}
+
 
 
 
@@ -107,4 +109,24 @@ func (b *vkBot) CommandHandler(command string, action func(m interface{})) {
 	b.HandleOnCommand(command, func(m * vk.Message){
 		action(m)
 	})
+}
+
+func (b *vkBot) checkUser(id int) (uid int, err error) {
+	return checkUser(id, true)
+}
+
+func (b *vkBot) addUser(user *User) (uid int, err error) {
+	return addUser(user, true)
+}
+
+func (b *vkBot) getUser(uid int) (User, error) {
+	user, err := getVkUser(uid)
+	if err != nil {
+		return User{}, err
+	}
+	return User{user.FirstName, user.LastName, user.ID}, nil
+}
+
+func (b *vkBot) getUserLocale(id int) *messageTemplates {
+	return getUserLocale(id, true)
 }

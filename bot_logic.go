@@ -26,7 +26,14 @@ func AddHandlers(bots ...Bot) {
 				reply = fmt.Sprintf(templates.Hello, sender.FirstName)
 			} else {
 				// seen this user
-				sender, err := bot.getUser(uid)
+				var sender User
+				// TODO: add context or whatever
+				switch bot.(type) {
+				case *vkBot:
+					sender, err = bot.getUser(uid)
+				case *tgBot:
+					sender = bot.GetSender(m)
+				}
 				if err != nil {
 					reply = templates.Error
 					// TODO: logging
