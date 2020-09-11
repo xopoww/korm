@@ -247,11 +247,12 @@ func oldKeysEraser() {
 
 
 // get the preferred locale for user
-func getUserLocale(id int, vk bool)messages{
+func getUserLocale(id int, vk bool)*messageTemplates{
 	// TODO: locale selection and DB query here
 	id = 0
 	vk = false
-	return locales["RU"].Messages
+	locale := locales["RU"].Messages
+	return &locale
 }
 
 const (

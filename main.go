@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	_ "github.com/mattn/go-sqlite3"
 	vk "github.com/xopoww/vk_min_api"
+	tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"math/rand"
 	"time"
@@ -62,13 +63,20 @@ func main() {
 
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
-	tbot, err := tgInit(TG_TOKEN)
+	tbot, err := tb.NewBot(tb.Settings{
+		Token:  TG_TOKEN,
+		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
+	})
 	if err != nil {
 		tgLogger.Fatalf("Error initializing telebot: %s", err)
+	} else {
+		tgLogger.Info("Initialized a TG bot.")
 	}
 
 	// abstract bot inits
-	AddHandlers(&vkBot{vbot}, &tgBot{tbot}) // TODO: <---------------------------------------------------------
+	AddHandlers(
+		&vkBot{vbot},
+		&tgBot{tbot})
 
 	// database initialization
 	db, err = sql.Open("sqlite3", dbname)
