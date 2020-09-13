@@ -34,7 +34,11 @@ func checkUser(id int, vk bool)(int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer r.Close()
+	defer func(){
+		if err := r.Close(); err != nil {
+			dbLogger.Errorf("Error closing query result: %s", err)
+		}
+	}()
 	if r.Next() {
 		var uid int
 		err = r.Scan(&uid)
@@ -88,6 +92,11 @@ func getVkUser(uid int)(vk.User, error) {
 	query := fmt.Sprintf(`SELECT %s.id, FirstName, LastName FROM %s JOIN Users WHERE Users.id = $1`,
 		VkUsersTable, VkUsersTable)
 	r, err := db.Query(query, uid)
+	defer func(){
+		if err := r.Close(); err != nil {
+			dbLogger.Errorf("Error closing query result: %s", err)
+		}
+	}()
 	if err != nil {
 		return user, err
 	}
