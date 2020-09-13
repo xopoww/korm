@@ -56,11 +56,11 @@ On success returns the uid of the user added, else returns 0 and error.
 func addUser(user * User, vk bool)(int, error) {
 	var table, idName string
 	if vk {
-		table = TgUsersTable
-		idName = "tgID"
-	} else {
 		table = VkUsersTable
 		idName = "vkID"
+	} else {
+		table = TgUsersTable
+		idName = "tgID"
 	}
 
 	query := fmt.Sprintf(`INSERT INTO "%s" (FirstName, LastName, id) VALUES ($1, $2, $3)`, table)
