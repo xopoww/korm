@@ -51,11 +51,15 @@ func (b * tgBot) GetSender(m interface{})User {
 }
 
 func (b *tgBot) DefaultHandler(action func(m interface{})) {
-	b.Handle(tb.OnText, action)
+	b.Handle(tb.OnText, func(m * tb.Message){
+		action(m)
+	})
 }
 
 func (b *tgBot) CommandHandler(command string, action func(m interface{})) {
-	b.Handle("/"+command, action)
+	b.Handle("/"+command, func(m * tb.Message){
+		action(m)
+	})
 }
 
 func (b *tgBot) checkUser(id int) (uid int, err error) {
