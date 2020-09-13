@@ -17,8 +17,8 @@ type Bot interface {
 	GetContents(message interface{}) (text string, fromID int)
 	GetSender(message interface{}) User
 
-	DefaultHandler(action func(m interface{}))
-	CommandHandler(command string, action func(m interface{}))
+	DefaultHandler(action func(bot Bot, m interface{}))
+	CommandHandler(command string, action func(bot Bot, m interface{}))
 
 	checkUser(id int)(uid int, err error)
 	addUser(user * User)(uid int, err error)
@@ -50,15 +50,15 @@ func (b * tgBot) GetSender(m interface{})User {
 	return User{u.FirstName, u.LastName, u.ID}
 }
 
-func (b *tgBot) DefaultHandler(action func(m interface{})) {
+func (b *tgBot) DefaultHandler(action func(bot Bot, m interface{})) {
 	b.Handle(tb.OnText, func(m * tb.Message){
-		action(m)
+		action(b, m)
 	})
 }
 
-func (b *tgBot) CommandHandler(command string, action func(m interface{})) {
+func (b *tgBot) CommandHandler(command string, action func(bot Bot, m interface{})) {
 	b.Handle("/"+command, func(m * tb.Message){
-		action(m)
+		action(b, m)
 	})
 }
 
@@ -103,15 +103,15 @@ func (b *vkBot) GetSender(message interface{}) User {
 	return User{user.FirstName, user.LastName, user.ID}
 }
 
-func (b *vkBot) DefaultHandler(action func(m interface{})) {
+func (b *vkBot) DefaultHandler(action func(bot Bot, m interface{})) {
 	b.HandleDefault(func(m * vk.Message){
-		action(m)
+		action(b, m)
 	})
 }
 
-func (b *vkBot) CommandHandler(command string, action func(m interface{})) {
+func (b *vkBot) CommandHandler(command string, action func(bot Bot, m interface{})) {
 	b.HandleOnCommand(command, func(m * vk.Message){
-		action(m)
+		action(b, m)
 	})
 }
 

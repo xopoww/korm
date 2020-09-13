@@ -5,7 +5,7 @@ import "fmt"
 func AddHandlers(bots ...Bot) {
 	for _, bot := range bots {
 		// on start
-		bot.CommandHandler("start", func(m interface{}){
+		bot.CommandHandler("start", func(bot Bot, m interface{}){
 			botType := ""
 			switch bot.(type) {
 			case *tgBot:
@@ -14,7 +14,7 @@ func AddHandlers(bots ...Bot) {
 				botType = "VK bot"
 			}
 			fmt.Printf("Handling start by %s", botType)
-			
+
 			_, fromID := bot.GetContents(m)
 			templates := bot.getUserLocale(fromID)
 			var reply string
