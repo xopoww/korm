@@ -12,10 +12,14 @@ var (
 	db *sql.DB
 )
 
-// checks if the user with this id is in the DB
-// if vk is true, the id is VK user id
-// else it is a Telegram user id
-// returns UID is the user exists and 0 if not
+// ======== User management ========
+
+/* Check if the user is in the DB by their in-app ID.
+
+If vk is true, id is supposed to be VK user ID. Else, it is Telegram user id.
+
+Returns uid of the user if the corresponding record exist and 0 if not.
+ */
 func checkUser(id int, vk bool)(int, error) {
 	var xID, xNet string
 	if vk {
@@ -52,10 +56,10 @@ On success returns the uid of the user added, else returns 0 and error.
 func addUser(user * User, vk bool)(int, error) {
 	var table, idName string
 	if vk {
-		table = "TgUsers"
+		table = TgUsersTable
 		idName = "tgID"
 	} else {
-		table = "VkUsers"
+		table = VkUsersTable
 		idName = "vkID"
 	}
 
@@ -77,11 +81,13 @@ func addUser(user * User, vk bool)(int, error) {
 	return int(uid), nil
 }
 
-// get a vk user by uid
+/* Get a vk user by uid
+ */
 func getVkUser(uid int)(vk.User, error) {
 	var user vk.User
-	r, err := db.Query(`SELECT VkUsers.id, FirstName, LastName FROM VkUsers JOIN Users WHERE Users.id = $1`,
-		uid)
+	query := fmt.Sprintf(`SELECT %s.id, FirstName, LastName FROM %s JOIN Users WHERE Users.id = $1`,
+		VkUsersTable, VkUsersTable)
+	r, err := db.Query(query, uid)
 	if err != nil {
 		return user, err
 	}
@@ -91,7 +97,12 @@ func getVkUser(uid int)(vk.User, error) {
 }
 
 
-// checks if the user is already synced
+
+
+// ======== Synchronization ========
+
+/* Check if the user is already synced
+*/
 func isSynced(id int, vk bool)(bool, error) {
 	toID, fromID := "vkID", "tgID"
 	if vk {
@@ -197,7 +208,7 @@ DELETE FROM Users WHERE id = $3;
 	return nil
 }
 
-// searches for key in Syncro table and
+// searches for key in Synchro table and
 // returns a pair (id, fromVK) if the key exists
 // returns (0, false) otherwise
 func getIdByKey(key string)(int, bool, error){
@@ -246,6 +257,9 @@ func oldKeysEraser() {
 }
 
 
+
+// ======== Misc ========
+
 // get the preferred locale for user
 func getUserLocale(id int, vk bool)*messageTemplates{
 	// TODO: locale selection and DB query here
@@ -256,46 +270,9 @@ func getUserLocale(id int, vk bool)*messageTemplates{
 }
 
 const (
-	dbCreation = `
-CREATE TABLE IF NOT EXISTS "VkUsers" (
-	id			INTEGER NOT NULL PRIMARY KEY UNIQUE,
-	FirstName	TEXT NOT NULL,
-	LastName	TEXT NOT NULL
-);
+	dbTemplate = "database_creation.sql"
+	dbname = "korm.db"
 
-CREATE TABLE IF NOT EXISTS "TgUsers" (
-	id			INTEGER NOT NULL PRIMARY KEY UNIQUE,
-	FirstName	TEXT NOT NULL,
-	LastName	TEXT,
-	Username	TEXT
-
-);
-
-CREATE TABLE IF NOT EXISTS "Users" (
-	id			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	vkID		INTEGER UNIQUE,
-	tgID		INTEGER UNIQUE,
-	
-	FOREIGN KEY("vkID") REFERENCES "VkUsers"("id"),
-	FOREIGN KEY("tgID") REFERENCES "TgUsers"("id")
-);
-
-CREATE TABLE IF NOT EXISTS "Orders" (
-	id			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-	UID			INTEGER NOT NULL,
-	Dish		INTEGER NOT NULL,
-	Date		INTEGER NOT NULL,
-
-	FOREIGN KEY("UID") REFERENCES "Users"("id")
-);
-
-CREATE TABLE IF NOT EXISTS "Synchro" (
-	id		INTEGER NOT NULL,
-	fromVK	INTEGER,
-	SyncKey	TEXT NOT NULL UNIQUE
-);
-`
-
-
-	dbname = "./korm.db"
+	VkUsersTable = "VkUsers"
+	TgUsersTable = "TgUsers"
 )

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/xopoww/gologs"
 	vk "github.com/xopoww/vk_min_api"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -12,18 +13,20 @@ type User struct {
 	ID			int
 }
 
-type Bot interface {
+type BotHandle interface {
 	SendText(id int, msg string) error
 	GetContents(message interface{}) (text string, fromID int)
 	GetSender(message interface{}) User
 
-	DefaultHandler(action func(bot Bot, m interface{}))
-	CommandHandler(command string, action func(bot Bot, m interface{}))
+	DefaultHandler(action func(bot BotHandle, m interface{}))
+	CommandHandler(command string, action func(bot BotHandle, m interface{}))
 
 	checkUser(id int)(uid int, err error)
 	addUser(user * User)(uid int, err error)
 	getUser(uid int)(User, error)
 	getUserLocale(id int)*messageTemplates
+
+	Logger()*gologs.Logger
 }
 
 type tgBot struct {
@@ -50,13 +53,13 @@ func (b * tgBot) GetSender(m interface{})User {
 	return User{u.FirstName, u.LastName, u.ID}
 }
 
-func (b *tgBot) DefaultHandler(action func(bot Bot, m interface{})) {
+func (b *tgBot) DefaultHandler(action func(bot BotHandle, m interface{})) {
 	b.Handle(tb.OnText, func(m * tb.Message){
 		action(b, m)
 	})
 }
 
-func (b *tgBot) CommandHandler(command string, action func(bot Bot, m interface{})) {
+func (b *tgBot) CommandHandler(command string, action func(bot BotHandle, m interface{})) {
 	b.Handle("/"+command, func(m * tb.Message){
 		action(b, m)
 	})
@@ -78,6 +81,9 @@ func (b *tgBot) getUserLocale(id int) *messageTemplates {
 	return getUserLocale(id, false)
 }
 
+func (b *tgBot) Logger()*gologs.Logger {
+	return &tgLogger
+}
 
 
 
@@ -103,13 +109,13 @@ func (b *vkBot) GetSender(message interface{}) User {
 	return User{user.FirstName, user.LastName, user.ID}
 }
 
-func (b *vkBot) DefaultHandler(action func(bot Bot, m interface{})) {
+func (b *vkBot) DefaultHandler(action func(bot BotHandle, m interface{})) {
 	b.HandleDefault(func(m * vk.Message){
 		action(b, m)
 	})
 }
 
-func (b *vkBot) CommandHandler(command string, action func(bot Bot, m interface{})) {
+func (b *vkBot) CommandHandler(command string, action func(bot BotHandle, m interface{})) {
 	b.HandleOnCommand(command, func(m * vk.Message){
 		action(b, m)
 	})
@@ -133,4 +139,8 @@ func (b *vkBot) getUser(uid int) (User, error) {
 
 func (b *vkBot) getUserLocale(id int) *messageTemplates {
 	return getUserLocale(id, true)
+}
+
+func (b *vkBot) Logger()*gologs.Logger {
+	return &vkLogger
 }

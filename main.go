@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	_ "github.com/mattn/go-sqlite3"
@@ -8,7 +9,9 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"math/rand"
+	"path/filepath"
 	"time"
+	"text/template"
 
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -79,13 +82,28 @@ func main() {
 		&tgBot{tbot})
 
 	// database initialization
-	db, err = sql.Open("sqlite3", dbname)
+	db, err = sql.Open("sqlite3", filepath.Join(".", dbname))
 	if err != nil {
 		dbLogger.Fatalf("Error opening a database: %s", err)
 		return
 	}
 	defer db.Close()
-	_, err = db.Exec(dbCreation)
+	tmpl, err := template.ParseFiles(filepath.Join(".", dbTemplate))
+	if err != nil {
+		dbLogger.Fatalf("Error parsing database creation template: %s", err)
+		return
+	}
+	var script bytes.Buffer
+	dbNames := map[string]interface{}{
+		"VkUsersTable": VkUsersTable,
+		"TgUsersTable": TgUsersTable,
+	}
+	err = tmpl.Execute(&script, dbNames)
+	if err != nil {
+		dbLogger.Fatalf("Error executing database creation template: %s", err)
+		return
+	}
+	_, err = db.Exec(script.String())
 	if err != nil {
 		dbLogger.Fatalf("Error initializing a database: %s", err)
 		return
