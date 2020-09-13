@@ -41,12 +41,12 @@ func (b * tgBot) SendText(id int, msg string)error {
 }
 
 func (b * tgBot) GetContents(m interface{})(text string, fromID int) {
-	tgm := m.(tb.Message)
+	tgm := m.(*tb.Message)
 	return tgm.Text, tgm.Sender.ID
 }
 
 func (b * tgBot) GetSender(m interface{})User {
-	u := (m).(tb.Message).Sender
+	u := (m).(*tb.Message).Sender
 	return User{u.FirstName, u.LastName, u.ID}
 }
 
@@ -90,12 +90,12 @@ func (b *vkBot) SendText(id int, msg string) error {
 }
 
 func (b *vkBot) GetContents(message interface{}) (text string, fromID int) {
-	vkm := message.(vk.Message)
+	vkm := message.(*vk.Message)
 	return vkm.Text, vkm.FromID
 }
 
 func (b *vkBot) GetSender(message interface{}) User {
-	fromID := message.(vk.Message).FromID
+	fromID := message.(*vk.Message).FromID
 	user, err := b.GetUserByID(fromID)
 	if err != nil {
 		panic(err)
