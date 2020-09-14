@@ -35,3 +35,10 @@ CREATE TABLE IF NOT EXISTS "Synchro" (
                                          fromVK	INTEGER,
                                          SyncKey	TEXT NOT NULL UNIQUE
 );
+
+CREATE TABLE IF NOT EXISTS "Admins" (
+        id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+        username    TEXT NOT NULL UNIQUE,
+        passhash    BLOB NOT NULL,
+        name        TEXT NOT NULL
+);

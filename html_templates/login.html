@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login page</title>
+
+    <style>
+        input:invalid {
+            border: 2px dashed red;
+        }
+
+        input:valid {
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+<h1>Login to proceed:</h1>
+
+<div style="text-align: center;">
+<form action="" name="login">
+    <div class="row">
+        <label>username: <input type="text" name="username" required pattern="[a-zA-Z0-9]+" maxlength="15"></label>
+    </div>
+    <div class="row">
+        <label>password: <input type="password" name="password" required></label>
+    </div>
+    <div class="row">
+        <input type="submit" value="Sign in" id="submit" disabled>
+    </div>
+</form>
+
+<div id="status"></div>
+</div>
+
+<script>
+    window.onload = function(){
+        let socket = new WebSocket("ws://{{.host}}/admin{{.wsEndpoint}}");
+        let status = document.querySelector("#status");
+
+        socket.onerror = function(event){
+            status.innerHTML = "error: " + event.reason
+        }
+
+        socket.onmessage = function(event){
+            let response = JSON.parse(event.data)
+            switch (response["status"]){
+                case 0:
+                    document.cookie = "auth=" + response["token"]
+                    window.open("/home", "_self")
+                    break
+                case 1:
+                    status.innerHTML = response["error"]
+                    break
+                case 2:
+                    status.innerHTML = "Error: " + response["error"]
+                    break
+            }
+        }
+
+        document.forms["login"].onsubmit = function(){
+            let username = this.username.value;
+            let password = this.password.value;
+            document.cookie = "username=" + username
+            let credentials = {
+                "username": username,
+                "password": password,
+            }
+            socket.send(JSON.stringify(credentials));
+            return false;
+        }
+    }
+</script>
+</body>
+</html>

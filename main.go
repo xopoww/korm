@@ -24,6 +24,7 @@ var (
 	vkLogger = gologs.NewLogger("VK handler")
 	dbLogger = gologs.NewLogger("SQL handler")
 	tgLogger = gologs.NewLogger("TG handler")
+	aaLogger = gologs.NewLogger("Admin app")
 )
 
 var locales map[string]locale
@@ -42,6 +43,7 @@ func main() {
 	vkLogger.AddWriter(os.Stdout, lvl)
 	tgLogger.AddWriter(os.Stdout, lvl)
 	dbLogger.AddWriter(os.Stdout, lvl)
+	aaLogger.AddWriter(os.Stdout, lvl)
 
 	// messages from JSON
 	var err error
@@ -109,6 +111,15 @@ func main() {
 		return
 	}
 	oldKeysEraser()
+
+	// admin app
+	router := makeAdminRouter()
+	http.Handle("/admin", router)
+	// TODO: get rid of this nonsense
+	err = addAdmin("admin", "admin", "Arseny")
+	if err != nil {
+		panic(err)
+	}
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)

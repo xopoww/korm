@@ -6,6 +6,9 @@ import (
 	"fmt"
 	vk "github.com/xopoww/vk_min_api"
 	"time"
+
+	"crypto/sha1"
+	"bytes"
 )
 
 var (
@@ -285,3 +288,69 @@ const (
 	VkUsersTable = "VkUsers"
 	TgUsersTable = "TgUsers"
 )
+
+/* Temporary function for testing
+
+*/
+
+func makeHash(pass string)[]byte {
+	hasher := sha1.New()
+	hasher.Write([]byte(pass))
+	return hasher.Sum(nil)
+}
+
+func checkHash(pass string, hash []byte)bool {
+	return bytes.Equal(makeHash(pass), hash)
+}
+
+func addAdmin(username, password, name string)error {
+	_, err := db.Exec(`INSERT INTO "Admins" (username, passhash, name) VALUES ($1, $2, $3)`,
+		username, makeHash(password), name)
+	return err
+}
+
+type wrongUsername struct {
+	username string
+}
+func (err * wrongUsername) Error()string {
+	return fmt.Sprintf("wrong username: %s", err.username)
+}
+
+type wrongPassword struct {
+	username string
+}
+func (err * wrongPassword) Error()string {
+	return fmt.Sprintf("wrong password for %s", err.username)
+}
+
+func checkAdmin(username, password string)error {
+	r, err := db.Query(`SELECT passhash FROM Admins WHERE username = $1`, username)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error making a query: %s", err))
+	}
+	if !r.Next() {
+		return &wrongUsername{username}
+	}
+	var trueHash []byte
+	err = r.Scan(&trueHash)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error scanning query result: %s", err))
+	}
+	if !checkHash(password, trueHash) {
+		return &wrongPassword{username}
+	}
+	return nil
+}
+
+func getAdminName(username string)(string, error) {
+	r, err := db.Query(`SELECT name FROM Admins WHERE username = $1`, username)
+	if err != nil {
+		return "", err
+	}
+	if !r.Next() {
+		return "", errors.New("No such username: " + username)
+	}
+	var name string
+	err = r.Scan(&name)
+	return name, err
+}
