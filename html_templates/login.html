@@ -12,6 +12,24 @@
         input:valid {
             border: 2px solid black;
         }
+
+        input[type="text"],[type="password"] {
+            background: azure;
+        }
+
+        input:disabled {
+            background: indianred;
+        }
+
+        div.row {
+            margin: 3px;
+        }
+
+        form {
+            border: 2px darkgrey;
+            background: beige;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -49,7 +67,7 @@
             switch (response["status"]){
                 case 0:
                     document.cookie = "auth=" + response["token"]
-                    window.open("/home", "_self")
+                    window.open("", "_self")
                     break
                 case 1:
                     status.innerHTML = response["error"]
@@ -69,7 +87,7 @@
                 "password": password,
             }
             socket.send(JSON.stringify(credentials));
-            return false;
+            return true;
         }
     }
 </script>
