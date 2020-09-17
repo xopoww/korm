@@ -126,7 +126,7 @@ func main() {
 	go func(){
 		defer waitGroup.Done()
 		vkLogger.Fatalf("Server failed: %s",
-			http.ListenAndServe("", nil))
+			http.ListenAndServe("", router))
 	}()
 
 	go tbot.Start()
