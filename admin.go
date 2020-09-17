@@ -18,8 +18,7 @@ const (
 	loginWsEndpoint = "/auth"
 )
 
-func makeAdminRouter() (router *mux.Router) {
-	router = mux.NewRouter()
+func setAdminSubroutes(s *mux.Router){
 	homeHandler := &templateHandler{
 		filename: "home.html",
 		getter: func(r * http.Request)map[string]interface{}{
@@ -46,9 +45,9 @@ func makeAdminRouter() (router *mux.Router) {
 			}
 		},
 	}
-	router.Handle("/", mustAuth(homeHandler))
-	router.Handle("/login", loginHandler)
-	router.Handle(loginWsEndpoint, authCheckHandler{})
+	s.Handle("/", mustAuth(homeHandler))
+	s.Handle("/login", loginHandler)
+	s.Handle(loginWsEndpoint, authCheckHandler{})
 
 	return
 }

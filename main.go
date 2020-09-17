@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	vk "github.com/xopoww/vk_min_api"
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -52,6 +53,9 @@ func main() {
 		panic(err)
 	}
 
+	// main router
+	router := mux.NewRouter()
+
 	// VK initialization
 	VK_TOKEN := os.Getenv("VK_TOKEN")
 	vbot, err := vk.NewBot(
@@ -64,7 +68,7 @@ func main() {
 	if err != nil {
 		vkLogger.Fatalf("error initializing vk bot: %s", err)
 	}
-	http.HandleFunc("/vk", vbot.HTTPHandler())
+	router.HandleFunc("/vk", vbot.HTTPHandler())
 
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
@@ -113,13 +117,9 @@ func main() {
 	oldKeysEraser()
 
 	// admin app
-	router := makeAdminRouter()
-	http.Handle("/admin", router)
+	setAdminSubroutes(router.PathPrefix("/admin").Subrouter())
 	// TODO: get rid of this nonsense
-	err = addAdmin("admin", "admin", "Arseny")
-	if err != nil {
-		panic(err)
-	}
+	_ = addAdmin("admin", "admin", "Arseny")
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
