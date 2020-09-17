@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"html/template"
