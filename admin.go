@@ -80,7 +80,7 @@ func setAdminSubroutes(s *mux.Router){
 			}
 		},
 	}
-	s.Handle("/dishes/{id:[0-9]+", mustAuth(dishHandler))
+	s.Handle("/dishes/{id:[0-9]+}", mustAuth(dishHandler))
 
 	// home
 	homeHandler := &templateHandler{
