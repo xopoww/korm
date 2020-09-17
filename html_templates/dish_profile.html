@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dishes - {{if .error}}error{{else}}{{.dish.Name}}{{end}}</title>
+</head>
+<body>
+<h1>KORM Admin page</h1>
+{{if .error}}
+    <h2>Error:</h2>
+    <h3>{{.error}}</h3>
+{{else}}
+    {{with .dish}}
+        <h3>{{.Name}}</h3>
+        <p>{{.Description}}</p>
+        <div>{{if .Quantity}} {{.Quantity}} left in stock {{else}} Sold out {{end}}</div>
+    {{end}}
+{{end}}
+</body>
+</html>

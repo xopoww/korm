@@ -130,10 +130,10 @@ func main() {
 		"Somewhat of a short description.",
 		25,
 	})
-	_ = addDish(Dish{
+	_ = addDish(
 		"Baz",
 		"A rather long description of a dish, arguably too long for anyone to actually read it. And yet, here it is, embrace it. TL;DR: Baz is a Baz. ",
-		11,
+		0,
 	})
 
 	var waitGroup sync.WaitGroup

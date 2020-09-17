@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"sync"
 )
 
@@ -38,9 +39,48 @@ func setAdminSubroutes(s *mux.Router){
 	// dishes list
 	dishesHandler := &templateHandler{
 		filename: "dishes.html",
-		getter: dishesGetter,
+		getter: func(r * http.Request)map[string]interface{}{
+			dishes, err := getDishes()
+			if err != nil {
+				aaLogger.Errorf("Error getting the list of dishes: %s", err)
+				return map[string]interface{}{
+					"error": err.Error(),
+				}
+			}
+			return map[string]interface{}{
+				"dishes": dishes,
+			}
+		},
 	}
-	s.Handle("/dishes/{id}", mustAuth(dishesHandler))
+	s.Handle("/dishes/all", mustAuth(dishesHandler))
+
+	// dish profile
+	dishHandler := &templateHandler{
+		filename: "dish_profile.html",
+		getter: func(r *http.Request)map[string]interface{}{
+			id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 0)
+			if err != nil {
+				aaLogger.Errorf("Error parsing id: %s", err)
+				return map[string]interface{}{
+					"error": err.Error(),
+				}
+			}
+			dish, err := getDishByID(int(id))
+			switch {
+			case err == nil:
+				break
+			default:
+				aaLogger.Errorf("Error getting dish: %s", err)
+				return map[string]interface{}{
+					"error": err.Error(),
+				}
+			}
+			return map[string]interface{}{
+				"dish": dish,
+			}
+		},
+	}
+	s.Handle("/dishes/{id:[0-9]+", mustAuth(dishHandler))
 
 	// home
 	homeHandler := &templateHandler{
@@ -250,22 +290,4 @@ func checkAuthToken(token, username string)bool {
 		return false
 	}
 	return bytes.Equal(tokenBytes, createAuthToken(username))
-}
-
-
-// ======== Dishes ========
-
-func dishesGetter(r *http.Request)map[string]interface{} {
-	vars := mux.Vars(r)
-	if vars["id"] == "all" {
-		dishes, err := getDishes()
-		if err != nil {
-			aaLogger.Errorf("Error getting list of dishes: %s", err)
-			return nil
-		}
-		return map[string]interface{}{
-			"dishes": dishes,
-		}
-	}
-	return nil
 }

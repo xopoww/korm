@@ -8,11 +8,15 @@
 <h1>KORM Admin page</h1>
 
 <h3>Dishes:</h3>
-<table style="border: black">
-    <tr><td>Name</td><td>Description</td><td>Quantity</td></tr>
+<table>
+    <tr><th>Name</th><th>Quantity</th><th></th></tr>
     {{with .dishes}}
         {{range . }}
-            <tr><td>{{.Name}}</td><td>{{.Description}}</td><td>{{.Quantity}}</td></tr>
+            <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Quantity}}</td>
+                <td><a href="/dishes/{{.ID}}">more info</a></td>
+            </tr>
         {{end}}
     {{end}}
 </table>

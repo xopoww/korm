@@ -354,23 +354,24 @@ func getAdminName(username string)(string, error) {
 
 
 type Dish struct {
+	ID				int
 	Name			string
 	Description		string
 	Quantity		int
 }
 
-func addDish(d Dish)error {
+func addDish(name, description string, quantity int)error {
 	_, err := db.Exec(`INSERT INTO "Dishes" (name, description, quantity) VALUES ($1, $2, $3)`,
-		d.Name, d.Description, d.Quantity)
+		name, description, quantity)
 	if err != nil {
 		return err
 	}
-	dbLogger.Infof("Added dish \"%s\" to database.", d.Name)
+	dbLogger.Infof("Added %d portions of \"%s\" to database.", quantity, name)
 	return nil
 }
 
 func getDishes()([]Dish, error) {
-	r, err := db.Query(`SELECT name, description, quantity FROM Dishes`)
+	r, err := db.Query(`SELECT id, name, description, quantity FROM Dishes`)
 	if err != nil {
 		return nil, err
 	}
@@ -379,11 +380,27 @@ func getDishes()([]Dish, error) {
 	result := make([]Dish, 0)
 	for r.Next() {
 		var d Dish
-		err = r.Scan(&d.Name, &d.Description, &d.Quantity)
+		err = r.Scan(&d.ID, &d.Name, &d.Description, &d.Quantity)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, d)
 	}
 	return result, nil
+}
+
+func getDishByID(id int)(Dish, error){
+	r, err := db.Query(`SELECT name, description, quantity FROM Dishes WHERE id = $1`, id)
+	if err != nil {
+		return Dish{}, err
+	}
+	if !r.Next() {
+		return Dish{}, errors.New("no such dish in the database")
+	}
+	dish := Dish{ID: id}
+	err = r.Scan(&dish.Name, &dish.Description, &dish.Quantity)
+	if err != nil {
+		return Dish{}, err
+	}
+	return dish, nil
 }
