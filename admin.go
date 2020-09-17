@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	host = ""
+	host = "35.228.234.83"
 	loginWsEndpoint = "/auth"
 )
 

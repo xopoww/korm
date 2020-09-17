@@ -15,22 +15,24 @@
     </style>
 </head>
 <body>
-<h1>Login to proceed:</h1>
+<h1>KORM Admin page</h1>
 
 <div style="text-align: center;">
-<form action="" name="login">
-    <div class="row">
-        <label>username: <input type="text" name="username" required pattern="[a-zA-Z0-9]+" maxlength="15"></label>
-    </div>
-    <div class="row">
-        <label>password: <input type="password" name="password" required></label>
-    </div>
-    <div class="row">
-        <input type="submit" value="Sign in" id="submit" disabled>
-    </div>
-</form>
+    <h3>Login to proceed:</h3>
 
-<div id="status"></div>
+    <form action="" name="login">
+        <div class="row">
+            <label>username: <input type="text" name="username" required pattern="[a-zA-Z0-9]+" maxlength="15"></label>
+        </div>
+        <div class="row">
+            <label>password: <input type="password" name="password" required></label>
+        </div>
+        <div class="row">
+            <input type="submit" value="Sign in" id="submit">
+        </div>
+    </form>
+    <hr>
+    <div id="status"></div>
 </div>
 
 <script>
