@@ -289,9 +289,6 @@ const (
 	TgUsersTable = "TgUsers"
 )
 
-/* Temporary function for testing
-
-*/
 
 func makeHash(pass string)[]byte {
 	hasher := sha1.New()
@@ -353,4 +350,40 @@ func getAdminName(username string)(string, error) {
 	var name string
 	err = r.Scan(&name)
 	return name, err
+}
+
+
+type Dish struct {
+	Name			string
+	Description		string
+	Quantity		int
+}
+
+func addDish(d Dish)error {
+	_, err := db.Exec(`INSERT INTO "Dishes" (name, description, quantity) VALUES ($1, $2, $3)`,
+		d.Name, d.Description, d.Quantity)
+	if err != nil {
+		return err
+	}
+	dbLogger.Infof("Added dish \"%s\" to database.", d.Name)
+	return nil
+}
+
+func getDishes()([]Dish, error) {
+	r, err := db.Query(`SELECT name, description, quantity FROM Dishes`)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	result := make([]Dish, 0)
+	for r.Next() {
+		var d Dish
+		err = r.Scan(&d.Name, &d.Description, &d.Quantity)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, d)
+	}
+	return result, nil
 }

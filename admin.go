@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"html/template"
@@ -19,6 +20,30 @@ const (
 )
 
 func setAdminSubroutes(s *mux.Router){
+
+	// login
+	loginHandler := &templateHandler{
+		filename: "login.html",
+		getter: func(r * http.Request)map[string]interface{}{
+			return map[string]interface{}{
+				"host": host,
+				"wsEndpoint": loginWsEndpoint,
+			}
+		},
+	}
+	s.Handle("/login", loginHandler)
+
+	// login websocket
+	s.Handle(loginWsEndpoint, authCheckHandler{})
+
+	// dishes list
+	dishesHandler := &templateHandler{
+		filename: "dishes.html",
+		getter: dishesGetter,
+	}
+	s.Handle("/dishes/all", mustAuth(dishesHandler))
+
+	// home
 	homeHandler := &templateHandler{
 		filename: "home.html",
 		getter: func(r * http.Request)map[string]interface{}{
@@ -36,18 +61,7 @@ func setAdminSubroutes(s *mux.Router){
 			}
 		},
 	}
-	loginHandler := &templateHandler{
-		filename: "login.html",
-		getter: func(r * http.Request)map[string]interface{}{
-			return map[string]interface{}{
-				"host": host,
-				"wsEndpoint": loginWsEndpoint,
-			}
-		},
-	}
-	s.Handle("/", mustAuth(homeHandler))
-	s.Handle("/login", loginHandler)
-	s.Handle(loginWsEndpoint, authCheckHandler{})
+	s.Handle("", mustAuth(homeHandler))
 
 	return
 }
@@ -234,4 +248,23 @@ func checkAuthToken(token, username string)bool {
 		return false
 	}
 	return bytes.Equal(tokenBytes, createAuthToken(username))
+}
+
+
+// ======== Dishes ========
+
+func dishesGetter(r *http.Request)map[string]interface{} {
+	dishes, err := getDishes()
+	if err != nil {
+		aaLogger.Errorf("Error getting list of dishes: %s", err)
+		return nil
+	}
+	tableBody := ""
+	for _, dish := range dishes {
+		tableBody += fmt.Sprintf("<tr> <td>%s</td> <td>%s</td> <td>%d</td> </tr>\n",
+			dish.Name, dish.Description, dish.Quantity)
+	}
+	return map[string]interface{}{
+		"table_body": tableBody,
+	}
 }

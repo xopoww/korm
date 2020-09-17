@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS "Orders" (
                                         Dish		INTEGER NOT NULL,
                                         Date		INTEGER NOT NULL,
 
-                                        FOREIGN KEY("UID") REFERENCES "Users"("id")
+                                        FOREIGN KEY("UID") REFERENCES "Users"("id"),
+                                        FOREIGN KEY("Dish") REFERENCES "Dishes"("id")
 );
 
 CREATE TABLE IF NOT EXISTS "Synchro" (
@@ -41,4 +42,11 @@ CREATE TABLE IF NOT EXISTS "Admins" (
         username    TEXT NOT NULL UNIQUE,
         passhash    BLOB NOT NULL,
         name        TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "Dishes" (
+        id          INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        name        TEXT NOT NULL UNIQUE,
+        description TEXT NOT NULL,
+        quantity    INTEGER
 );
