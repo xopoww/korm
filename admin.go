@@ -41,7 +41,7 @@ func setAdminSubroutes(s *mux.Router){
 		filename: "dishes.html",
 		getter: dishesGetter,
 	}
-	s.Handle("/dishes/all", mustAuth(dishesHandler))
+	s.Handle("/dishes/{id}", mustAuth(dishesHandler))
 
 	// home
 	homeHandler := &templateHandler{
@@ -82,9 +82,11 @@ func (h authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// not authenticated
 		w.Header().Set("location", "/admin/login")
 		w.WriteHeader(http.StatusTemporaryRedirect)
+		return
 	default:
 		// error
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	token, err := r.Cookie("auth")
 	switch err {
@@ -101,11 +103,12 @@ func (h authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// not authenticated
 		w.Header().Set("location", "/admin/login")
 		w.WriteHeader(http.StatusTemporaryRedirect)
+		return
 	default:
 		// error
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	return
 }
 
 /* Wrap a handler into authHandler
@@ -254,17 +257,16 @@ func checkAuthToken(token, username string)bool {
 // ======== Dishes ========
 
 func dishesGetter(r *http.Request)map[string]interface{} {
-	dishes, err := getDishes()
-	if err != nil {
-		aaLogger.Errorf("Error getting list of dishes: %s", err)
-		return nil
+	vars := mux.Vars(r)
+	if vars["id"] == "all" {
+		dishes, err := getDishes()
+		if err != nil {
+			aaLogger.Errorf("Error getting list of dishes: %s", err)
+			return nil
+		}
+		return map[string]interface{}{
+			"dishes": dishes,
+		}
 	}
-	tableBody := ""
-	for _, dish := range dishes {
-		tableBody += fmt.Sprintf("<tr> <td>%s</td> <td>%s</td> <td>%d</td> </tr>\n",
-			dish.Name, dish.Description, dish.Quantity)
-	}
-	return map[string]interface{}{
-		"table_body": tableBody,
-	}
+	return nil
 }
