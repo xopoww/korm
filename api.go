@@ -15,8 +15,10 @@ func (a * authChecker) Check(r * http.Request)(bool, error) {
 	err := checkAuthCookie(r)
 	switch {
 	case err == nil:
+		aaLogger.Debugf("allowed an api call from %s", r.Host)
 		return true, nil
 	case errors.Is(err, http.ErrNoCookie):
+		aaLogger.Debugf("denied an api call from %s", r.Host)
 		return false, nil
 	default:
 		return false, err
