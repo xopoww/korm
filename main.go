@@ -120,21 +120,10 @@ func main() {
 	setAdminSubroutes(router.PathPrefix("/admin").Subrouter())
 	// TODO: get rid of this nonsense
 	_ = addAdmin("admin", "admin", "Arseny")
-	_ = addDish(
-		"Foo",
-		"Tasty and nutritious F with double portion of O. Usually served before Bar and Baz.",
-		10,
-	)
-	_ = addDish(
-		"Bar",
-		"Somewhat of a short description.",
-		25,
-	)
-	_ = addDish(
-		"Baz",
-		"A rather long description of a dish, arguably too long for anyone to actually read it. And yet, here it is, embrace it. TL;DR: Baz is a Baz. ",
-		0,
-	)
+
+
+	// api
+	setApiSubroutes(router.PathPrefix("/api").Subrouter())
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)

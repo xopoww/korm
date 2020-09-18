@@ -7,8 +7,8 @@ import (
 	vk "github.com/xopoww/vk_min_api"
 	"time"
 
-	"crypto/sha1"
 	"bytes"
+	"crypto/sha1"
 )
 
 var (
@@ -360,14 +360,18 @@ type Dish struct {
 	Quantity		int
 }
 
-func addDish(name, description string, quantity int)error {
-	_, err := db.Exec(`INSERT INTO "Dishes" (name, description, quantity) VALUES ($1, $2, $3)`,
+func addDish(name, description string, quantity int)(int, error) {
+	ra, err := db.Exec(`INSERT INTO "Dishes" (name, description, quantity) VALUES ($1, $2, $3)`,
 		name, description, quantity)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	dbLogger.Infof("Added %d portions of \"%s\" to database.", quantity, name)
-	return nil
+	id, err := ra.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(id), nil
 }
 
 func getDishes()([]Dish, error) {
@@ -394,6 +398,7 @@ func getDishByID(id int)(Dish, error){
 	if err != nil {
 		return Dish{}, err
 	}
+	defer r.Close()
 	if !r.Next() {
 		return Dish{}, errors.New("no such dish in the database")
 	}
@@ -403,4 +408,52 @@ func getDishByID(id int)(Dish, error){
 		return Dish{}, err
 	}
 	return dish, nil
+}
+
+type ErrBadID struct {
+	table	string
+}
+
+func (e * ErrBadID) Error()string {
+	return fmt.Sprintf("no such id in \"%s\"", e.table)
+}
+
+func checkID(id int, table string)error {
+	query := fmt.Sprintf("SELECT 1 FROM %s WHERE id = $1", table)
+	r, err := db.Query(query, id)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	if !r.Next() {
+		return &ErrBadID{table}
+	}
+	return nil
+}
+
+type ErrBadArgument struct {
+	msg		string
+}
+
+func (e * ErrBadArgument) Error() string {
+	return e.msg
+}
+
+func subDish(id, delta int)error {
+	err := checkID(id, "Dishes")
+	if err != nil {
+		return err
+	}
+	ra, err := db.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity <= $1`, delta, id)
+	if err != nil {
+		return err
+	}
+	nrows, err := ra.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if nrows == 0 {
+		return &ErrBadArgument{"cannot subtract more than quantity"}
+	}
+	return nil
 }

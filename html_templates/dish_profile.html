@@ -12,8 +12,9 @@
 {{else}}
     {{with .dish}}
         <h3>{{.Name}}</h3>
-        <p>{{.Description}}</p>
-        <div>{{if .Quantity}} {{.Quantity}} left in stock {{else}} Sold out {{end}}</div>
+            <hr>
+            <p>{{if .Description}}{{.Description}}{{else}}No description.{{end}}</p>
+            <div>{{if .Quantity}} {{.Quantity}} left in stock {{else}} Sold out {{end}}</div>
     {{end}}
 {{end}}
 </body>

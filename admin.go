@@ -105,6 +105,32 @@ func setAdminSubroutes(s *mux.Router){
 	return
 }
 
+/* Check whether the client is authorized
+Returns:
+
+	- nil, if the client is authorized;
+
+	- http.ErrNoCookie, if the client is not authorized;
+
+	- other error, if something went wrong
+ */
+func checkAuthCookie(r *http.Request)error {
+	username, err := r.Cookie("username")
+	if err != nil {
+		return err
+	}
+	token, err := r.Cookie("auth")
+	if err != nil {
+		return err
+	}
+	if !checkAuthToken(token.Value, username.Value) {
+		// if username-token pair is invalid, just return ErrNoCookie
+		// it will be treated the same way as if the values were missing
+		return http.ErrNoCookie
+	}
+	return nil
+}
+
 /*
 authHandler wraps another http.Handler inside of it. It checks client's "username" and "auth"
 cookies and, if they aren't present / have invalid values, redirects to login page.
@@ -113,31 +139,12 @@ type authHandler struct {
 	next http.Handler
 }
 func (h authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	username, err := r.Cookie("username")
+	err := checkAuthCookie(r)
 	switch err {
 	case nil:
-		break
-	case http.ErrNoCookie:
-		// not authenticated
-		w.Header().Set("location", "/admin/login")
-		w.WriteHeader(http.StatusTemporaryRedirect)
+		// authenticated
+		h.next.ServeHTTP(w, r)
 		return
-	default:
-		// error
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	token, err := r.Cookie("auth")
-	switch err {
-	case nil:
-		// cookie is present
-		if checkAuthToken(token.Value, username.Value) {
-			// token is valid
-			h.next.ServeHTTP(w, r)
-			return
-		}
-		// token is invalid
-		fallthrough
 	case http.ErrNoCookie:
 		// not authenticated
 		w.Header().Set("location", "/admin/login")
