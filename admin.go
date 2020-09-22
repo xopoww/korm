@@ -59,6 +59,25 @@ func setAdminSubroutes(s *mux.Router){
 	}
 	s.Handle("/dishes/{id:[0-9]+}", mustAuth(dishHandler))
 
+	// order
+	orderHandler := &templateHandler{
+		filename: "order.html",
+		getter: func(r * http.Request)(data map[string]interface{}){
+			data = make(map[string]interface{})
+
+			// list of dishes
+			dishes, err := getDishes()
+			if err != nil {
+				aaLogger.Errorf("Error getting list of dishes: %v", err)
+				data["dishes_error"] = err.Error()
+			} else {
+				data["dishes"] = dishes
+			}
+			return
+		},
+	}
+	s.Handle("/order", mustAuth(orderHandler))
+
 	// home
 	homeHandler := &templateHandler{
 		filename: "home.html",
