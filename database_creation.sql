@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "Orders" (
         Date		INTEGER NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "OrderContents" (
+CREATE TABLE IF NOT EXISTS "OrderItems" (
         order_id       INTEGER NOT NULL,
         dish_id        INTEGER NOT NULL,
         quantity       INTEGER NOT NULL,

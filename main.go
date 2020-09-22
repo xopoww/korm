@@ -115,6 +115,7 @@ func main() {
 		return
 	}
 	oldKeysEraser()
+	go orderWorker()
 
 	// admin app
 	setAdminSubroutes(router.PathPrefix("/admin").Subrouter())

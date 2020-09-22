@@ -439,21 +439,91 @@ func (e * ErrBadArgument) Error() string {
 	return e.msg
 }
 
-func subDish(id, delta int)error {
+func subDish(id, delta int, tx *sql.Tx)error {
 	err := checkID(id, "Dishes")
 	if err != nil {
 		return err
 	}
-	ra, err := db.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity <= $1`, delta, id)
+
+	var ra sql.Result
+	if tx == nil {
+		ra, err = db.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity <= $1`, delta, id)
+	} else {
+		ra, err = tx.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity <= $1`, delta, id)
+	}
 	if err != nil {
 		return err
 	}
+
 	nrows, err := ra.RowsAffected()
 	if err != nil {
 		return err
 	}
 	if nrows == 0 {
 		return &ErrBadArgument{"cannot subtract more than quantity"}
+	}
+	return nil
+}
+
+type OrderItem struct {
+	DishID		int
+	Quantity	int
+}
+
+type Order struct {
+	UID			int
+	Items		[]OrderItem
+}
+
+var orderIn = make(chan Order)
+var orderOut = make(chan error)
+
+func orderWorker() {
+	for order := range orderIn {
+		orderOut <- makeOrder(order.UID, order.Items)
+	}
+}
+
+func registerOrder(order Order) error {
+	orderIn <- order
+	return <- orderOut
+}
+
+func makeOrder(uid int, items []OrderItem) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	ra, err := tx.Exec(`INSERT INTO Orders (UID, Date) VALUES ($1, $2)`, uid, time.Now().Unix())
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	orderID, err := ra.LastInsertId()
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	for _, item := range items {
+		err = subDish(item.DishID, item.Quantity, tx)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+
+		_, err = tx.Exec(`INSERT INTO OrderItems (order_id, dish_id, quantity) VALUES ($1, $2, $3)`,
+			orderID, item.DishID, item.Quantity)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
 	}
 	return nil
 }

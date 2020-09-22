@@ -40,7 +40,7 @@
 
     <form name="login">
         <div class="row">
-            <label>username: <input type="text" name="username" required pattern="[a-zA-Z0-9]+" maxlength="15"></label>
+            <label>username: <input type="text" name="username" required pattern="[a-zA-Z0-9 ]+" maxlength="15"></label>
         </div>
         <div class="row">
             <label>password: <input type="password" name="password" required></label>
@@ -54,44 +54,36 @@
 </div>
 
 <script>
-    window.onload = function(){
-        let socket = new WebSocket("ws://{{.host}}/admin{{.wsEndpoint}}");
-        let status = document.querySelector("#status");
-        let submit_button = document.querySelector("#submit")
-        let login_form = document.forms["login"]
+    let status = document.querySelector("#status")
 
-        socket.onerror = function(event){
-            status.innerHTML = "error: " + event.reason
-        }
+    document.forms["login"].onsubmit = function( event ) {
+        event.preventDefault()
 
-        socket.onmessage = function(event){
-            let response = JSON.parse(event.data)
-            switch (response["status"]){
-                case 0:
-                    document.cookie = "auth=" + response["token"]
-                    window.open("", "_self")
-                    break
-                case 1:
-                    status.innerHTML = response["error"]
-                    submit_button.disabled = false
-                    break
-                case 2:
-                    status.innerHTML = "Error: " + response["error"]
-                    break
-            }
-        }
+        let username = this.username.value
+        let password = this.password.value
 
-        login_form.onsubmit = function(){
-            let username = this.username.value;
-            let password = this.password.value;
-            document.cookie = "username=" + username
-            let credentials = {
-                "username": username,
-                "password": password,
-            }
-            socket.send(JSON.stringify(credentials));
-            return true;
-        }
+        fetch("/auth?username=" + username + "&password=" + password)
+            .then(function( response ){
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    status.innerHTML = "an error occurred, try again later"
+                }
+            })
+            .then(function( respJSON ){
+                if (respJSON["ok"]) {
+                    document.cookie = "username=" + username + ";path=/"
+                    document.cookie = "auth=" + respJSON["token"] + ";path=/"
+                    window.open("/", "_self")
+                } else {
+                    status.innerHTML = "wrong username or password"
+                }
+            })
+            .catch(function( error ){
+                console.log(error)
+            })
+
+        return true
     }
 </script>
 </body>

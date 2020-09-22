@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
-	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -32,9 +30,6 @@ func setAdminSubroutes(s *mux.Router){
 		},
 	}
 	s.Handle("/login", loginHandler)
-
-	// login websocket
-	s.Handle(loginWsEndpoint, authCheckHandler{})
 
 	// dishes list
 	dishesHandler := &templateHandler{
@@ -137,6 +132,7 @@ cookies and, if they aren't present / have invalid values, redirects to login pa
  */
 type authHandler struct {
 	next http.Handler
+	redirect bool
 }
 func (h authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := checkAuthCookie(r)
@@ -147,8 +143,12 @@ func (h authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case http.ErrNoCookie:
 		// not authenticated
-		w.Header().Set("location", "/admin/login")
-		w.WriteHeader(http.StatusTemporaryRedirect)
+		if h.redirect {
+			w.Header().Set("location", "/admin/login")
+			w.WriteHeader(http.StatusTemporaryRedirect)
+		} else {
+			w.WriteHeader(http.StatusForbidden)
+		}
 		return
 	default:
 		// error
@@ -160,83 +160,11 @@ func (h authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 /* Wrap a handler into authHandler
  */
 func mustAuth(next http.Handler)http.Handler {
-	return authHandler{next: next}
+	return authHandler{next: next, redirect: true}
 }
 
-
-
-const websocketBufSize = 1024
-var upgrader = &websocket.Upgrader{ReadBufferSize: websocketBufSize, WriteBufferSize: websocketBufSize}
-/*
-authCheckHandler is a websocket handler that reads user credentials and responds accordingly
- */
-type authCheckHandler struct {}
-/*
-Constants for authResponse status values
- */
-const (
-	authStatusOk = 0
-	authStatusBad = 1
-	authStatusErr = 2
-)
-func (h authCheckHandler) ServeHTTP(w http.ResponseWriter, r * http.Request){
-	// create a websocket connection
-	socket, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		aaLogger.Errorf("Unable to upgrade request to websocket: %s", err)
-		return
-	}
-	defer socket.Close()
-
-	// read a message from a websocket
-	_, data, err := socket.ReadMessage()
-	if err != nil {
-		aaLogger.Errorf("Error reading from a websocket: %s", err)
-	}
-
-	// unmarshal the message into user credentials struct
-	var creds struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-	err = json.Unmarshal(data, &creds)
-	if err != nil {
-		aaLogger.Errorf("Unmarshal error: %s", err)
-		return
-	}
-
-	// check the credentials and populate authResponse object
-	err = checkAdmin(creds.Username, creds.Password)
-	authResponse := make(map[string]interface{})
-	if err != nil {
-		// TODO: improve or simplify logic in this switch
-		switch err.(type) {
-		case *wrongPassword:
-			authResponse["status"] = authStatusBad
-			authResponse["error"] = err.Error()
-		case *wrongUsername:
-			authResponse["status"] = authStatusBad
-			authResponse["error"] = err.Error()
-		default:
-			authResponse["status"] = authStatusErr
-			authResponse["error"] = err.Error()
-		}
-	} else {
-		authResponse["status"] = authStatusOk
-		authResponse["token"] = hex.EncodeToString(createAuthToken(creds.Username))
-	}
-
-	// send the response to the websocket
-	responseData, err := json.Marshal(authResponse)
-	if err != nil {
-		aaLogger.Errorf("Marshal error: %s", err)
-		return
-	}
-	err = socket.WriteMessage(websocket.TextMessage, responseData)
-	if err != nil {
-		aaLogger.Errorf("Error writing to a websocket: %s", err)
-		return
-	}
+func mustAuthAPI(next http.Handler) http.Handler {
+	return authHandler{next: next, redirect: false}
 }
 
 /*
