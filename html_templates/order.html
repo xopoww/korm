@@ -37,10 +37,12 @@
         let order = []
         {{with .dishes}}
         {{range . }}
-            let dish{{- .ID -}} = this.dish{{- .ID -}}.value
-            if (dish{{- .ID -}} !== 0) {
-                order.push({"dish_id": {{.ID}}, "quantity": dish{{- .ID -}}})
+        {{with $dish := "dish".ID }}
+            let {{$dish}} = this.{{$dish}}.value
+            if ({{$dish}} !== 0) {
+                order.push({"dish_id": {{.ID}}, "quantity": {{$dish}} })
             }
+        {{end}}
         {{end}}
         {{end}}
 
