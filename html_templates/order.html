@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Make order</title>
+</head>
+<body>
+
+<h4>Select dishes:</h4> <br>
+<form name="order">
+    {{if .dishes_error}}
+        <div class="err">{{.dishes_error}}</div>
+    {{else}}
+        <table>
+            <tr><th>Name</th><th>Quantity</th><th></th></tr>
+            {{with .dishes}}
+                {{range . }}
+                    <tr>
+                        <td>{{.Name}}</td>
+                        <td>{{.Quantity}}</td>
+                        <td><input type="number" min="0" max="{{.Quantity}}" value="0" name="dish{{.ID}}"></td>
+                    </tr>
+                {{end}}
+            {{end}}
+        </table>
+        <input 
+    {{end}}
+</form>
+<div id="status"></div>
+<script>
+    let order_form = document.forms["order"]
+    let status = document.querySelector("#status")
+
+    order_form.onsubmit = async function( event ) {
+        event.preventDefault()
+
+        let order = []
+        {{with .dishes}}
+        {{range . }}
+            let dish{{.ID}} = this.dish{{.ID}}.value
+            if (dish{{.ID}} !== 0) {
+                order.push({"dish_id": {{.ID}}, "quantity": dish{{.ID}}})
+            }
+        {{end}}
+        {{end}}
+
+        fetch("/api/order?items=" + JSON.stringify(order))
+            .then(function( response ){
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    status.innerHTML = "an error occurred, try again later"
+                }
+            })
+            .then(async function( respJSON ){
+                if (respJSON["ok"]) {
+                    alert("Order successful!")
+                    await new Promise(r => setTimeout(r, 3000))
+                    window.open("/admin", "_self")
+                } else {
+                    status.innerHTML = "API error: " + respJSON["error"]
+                }
+            })
+            .catch(function( error ){
+                console.log(error)
+            })
+    }
+
+</script>
+</body>
+</html>
