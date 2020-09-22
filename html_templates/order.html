@@ -37,7 +37,7 @@
         let order = []
         {{with .dishes}}
         {{range . }}
-        {{with $dish := "dish".ID }}
+        {{with $dish := printf "dish%s" .ID }}
             let {{$dish}} = this.{{$dish}}.value
             if ({{$dish}} !== 0) {
                 order.push({"dish_id": {{.ID}}, "quantity": {{$dish}} })
