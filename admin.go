@@ -240,8 +240,12 @@ func methodAuthCheck(r * http.Request)(map[string]interface{}, error) {
 		return respondError(err)
 	}
 
+	token := createAuthToken(username)
+	tokenHex := make([]byte, hex.EncodedLen(len(token)))
+	hex.Encode(tokenHex, token)
+
 	return map[string]interface{}{
 		"ok": true,
-		"token": createAuthToken(username),
+		"token": string(tokenHex),
 	}, nil
 }
