@@ -449,9 +449,9 @@ func subDish(id, delta int, tx *sql.Tx)error {
 
 	var ra sql.Result
 	if tx == nil {
-		ra, err = db.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity <= $1`, delta, id)
+		ra, err = db.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity >= $1`, delta, id)
 	} else {
-		ra, err = tx.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity <= $1`, delta, id)
+		ra, err = tx.Exec(`UPDATE Dishes SET quantity = quantity - $1 WHERE id = $2 AND quantity >= $1`, delta, id)
 	}
 	if err != nil {
 		return err
