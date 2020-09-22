@@ -325,6 +325,7 @@ func checkAdmin(username, password string)error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("error making a query: %s", err))
 	}
+	defer r.Close()
 	if !r.Next() {
 		return &wrongUsername{username}
 	}
@@ -344,6 +345,7 @@ func getAdminName(username string)(string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer r.Close()
 	if !r.Next() {
 		return "", errors.New("No such username: " + username)
 	}
