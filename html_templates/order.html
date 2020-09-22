@@ -38,9 +38,9 @@
         {{with .dishes}}
         {{range . }}
         {{$dish := printf "dish%d" .ID }}
-            let {{$dish}} = this.{{$dish}}.value
-            if ({{$dish}} !== 0) {
-                order.push({"dish_id": {{.ID}}, "quantity": {{$dish}} })
+            let {{print $dish}} = this.{{print $dish}}.value
+            if ({{print $dish}} !== 0) {
+                order.push({"dish_id": {{.ID}}, "quantity": {{print $dish}} })
             }
         {{end}}
         {{end}}
