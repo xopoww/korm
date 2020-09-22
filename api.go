@@ -50,6 +50,7 @@ func respondError(err error)(map[string]interface{}, error) {
 	}, nil
 }
 
+
 func methodAddDish(r * http.Request)(map[string]interface{}, error) {
 	name := r.Form.Get("name")
 	if name == "" {
@@ -77,38 +78,17 @@ func methodAddDish(r * http.Request)(map[string]interface{}, error) {
 }
 
 func methodOrder(r * http.Request)(map[string]interface{}, error) {
-	uidS := r.Form.Get("uid")
-	if uidS == "" {
-		return respondError(errors.New("missing parameter: uid"))
+	itemsJSON := r.Form.Get("items")
+	if itemsJSON == "" {
+		return respondError(errors.New("missing parameter: items"))
 	}
-	uid, err := strconv.ParseInt(uidS, 10, 0)
+	var items []OrderItem
+	err := json.Unmarshal([]byte(itemsJSON), &items)
 	if err != nil {
 		return respondError(err)
 	}
 
-	dishIDsS := r.Form["dish_ids"]
-	items := make([]OrderItem, len(dishIDsS))
-	for index, idS := range dishIDsS {
-		id, err := strconv.ParseInt(idS, 10, 0)
-		if err != nil {
-			return respondError(err)
-		}
-		items[index].DishID = int(id)
-	}
-
-	quantitiesS := r.Form["quantities"]
-	if len(quantitiesS) != len(dishIDsS) {
-		return respondError(errors.New("dish_ids and quantities must have the same len"))
-	}
-	for index, qS := range quantitiesS {
-		q, err := strconv.ParseInt(qS, 10, 0)
-		if err != nil {
-			return respondError(err)
-		}
-		items[index].Quantity = int(q)
-	}
-
-	err = registerOrder(Order{int(uid), items})
+	err = registerOrder(Order{0, items})
 	if err != nil {
 		return respondError(err)
 	}

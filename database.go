@@ -468,8 +468,8 @@ func subDish(id, delta int, tx *sql.Tx)error {
 }
 
 type OrderItem struct {
-	DishID		int
-	Quantity	int
+	DishID		int		`json:"dish_id"`
+	Quantity	int		`json:"quantity"`
 }
 
 type Order struct {

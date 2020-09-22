@@ -31,24 +31,6 @@ func setAdminSubroutes(s *mux.Router){
 	}
 	s.Handle("/login", loginHandler)
 
-	// dishes list
-	dishesHandler := &templateHandler{
-		filename: "dishes.html",
-		getter: func(r * http.Request)map[string]interface{}{
-			dishes, err := getDishes()
-			if err != nil {
-				aaLogger.Errorf("Error getting the list of dishes: %s", err)
-				return map[string]interface{}{
-					"error": err.Error(),
-				}
-			}
-			return map[string]interface{}{
-				"dishes": dishes,
-			}
-		},
-	}
-	s.Handle("/dishes/all", mustAuth(dishesHandler))
-
 	// dish profile
 	dishHandler := &templateHandler{
 		filename: "dish_profile.html",
@@ -80,19 +62,29 @@ func setAdminSubroutes(s *mux.Router){
 	// home
 	homeHandler := &templateHandler{
 		filename: "home.html",
-		getter: func(r * http.Request)map[string]interface{}{
+		getter: func(r * http.Request)(data map[string]interface{}){
+			data = make(map[string]interface{})
+
+			// name of admin
 			username, err := r.Cookie("username")
+			if err == nil {
+				name, err := getAdminName(username.Value)
+				if err != nil {
+					aaLogger.Errorf("Error getting admin name: %s", err)
+				} else {
+					data["name"] = name
+				}
+			}
+
+			// list of dishes
+			dishes, err := getDishes()
 			if err != nil {
-				return nil
+				aaLogger.Errorf("Error getting list of dishes: %v", err)
+				data["dishes_error"] = err.Error()
+			} else {
+				data["dishes"] = dishes
 			}
-			name, err := getAdminName(username.Value)
-			if err != nil {
-				aaLogger.Errorf("Error getting admin name: %s", err)
-				return nil
-			}
-			return map[string]interface{}{
-				"name": name,
-			}
+			return
 		},
 	}
 	s.Handle("", mustAuth(homeHandler))

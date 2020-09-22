@@ -3,11 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+    <style>
+        div.right-bar {
+            background: beige;
+            border: slategrey;
+            float: right;
+        }
+
+        div.head {
+            float: top;
+            background: burlywood;
+            overflow: hidden;
+        }
+
+        div.err {
+            color: red;
+        }
+    </style>
 </head>
 <body>
-<h1>KORM Admin page</h1>
-<h3>Welcome, {{.name}}!</h3>
+<div class="head">
+    <div style="float: left"><h1>KORM Admin page</h1></div>
+    <div style="float: right"><h2>Orders today: {{.NumOrders}}</h2></div>
+</div>
 
-<a href="/admin/dishes/all">See list of dishes</a>
+<br>
+
+<div class="main">
+    <h2>Welcome, {{.name}}!</h2>
+</div>
+
+<div class="right-bar">
+    <h4>Dishes:</h4> <br>
+    {{if .dishes_error}}
+        <div class="err">{{.dishes_error}}</div>
+    {{else}}
+        <table>
+                <tr><th>Name</th><th>Quantity</th><th></th></tr>
+                {{with .dishes}}
+                    {{range . }}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td>{{.Quantity}}</td>
+                            <td><a href="/admin/dishes/{{.ID}}">more info</a></td>
+                        </tr>
+                    {{end}}
+                {{end}}
+        </table>
+    {{end}}
+</div>
 </body>
 </html>
