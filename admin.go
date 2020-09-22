@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
@@ -210,7 +211,12 @@ func (h * templateHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 	}
 
 	// execute the template
-	err := h.tmpl.Execute(w, data)
+	var err error
+	if h.tmpl != nil {
+		err = h.tmpl.Execute(w, data)
+	} else {
+		err = errors.New("template is nil")
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		aaLogger.Errorf("Error executing a template: %s", err)
