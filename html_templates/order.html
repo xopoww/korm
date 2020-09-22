@@ -31,15 +31,15 @@
     let order_form = document.forms["order"]
     let status = document.querySelector("#status")
 
-    order_form.onsubmit = async function( event ) {
+    order_form.onsubmit = function( event ) {
         event.preventDefault()
 
         let order = []
         {{with .dishes}}
         {{range . }}
-            let dish{{.ID}} = this.dish{{.ID}}.value
-            if (dish{{.ID}} !== 0) {
-                order.push({"dish_id": {{.ID}}, "quantity": dish{{.ID}}})
+            let dish{{-.ID-}} = this.dish{{-.ID-}}.value
+            if (dish{{-.ID-}} !== 0) {
+                order.push({"dish_id": {{.ID}}, "quantity": dish{{-.ID-}}})
             }
         {{end}}
         {{end}}
