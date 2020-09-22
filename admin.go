@@ -97,6 +97,9 @@ func setAdminSubroutes(s *mux.Router){
 	}
 	s.Handle("", mustAuth(homeHandler))
 
+	// auth
+	s.HandleFunc("/auth", wrapMethod(methodAuthCheck))
+
 	return
 }
 
@@ -225,4 +228,20 @@ func checkAuthToken(token, username string)bool {
 		return false
 	}
 	return bytes.Equal(tokenBytes, createAuthToken(username))
+}
+
+
+func methodAuthCheck(r * http.Request)(map[string]interface{}, error) {
+	username := r.Form.Get("username")
+	password := r.Form.Get("password")
+
+	err := checkAdmin(username, password)
+	if err != nil {
+		return respondError(err)
+	}
+
+	return map[string]interface{}{
+		"ok": true,
+		"token": createAuthToken(username),
+	}, nil
 }

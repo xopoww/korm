@@ -62,7 +62,7 @@
         let username = this.username.value
         let password = this.password.value
 
-        fetch("/auth?username=" + username + "&password=" + password)
+        fetch("/admin/auth?username=" + username + "&password=" + password)
             .then(function( response ){
                 if (response.ok) {
                     return response.json()
@@ -74,7 +74,7 @@
                 if (respJSON["ok"]) {
                     document.cookie = "username=" + username + ";path=/"
                     document.cookie = "auth=" + respJSON["token"] + ";path=/"
-                    window.open("/", "_self")
+                    window.open("/admin", "_self")
                 } else {
                     status.innerHTML = "wrong username or password"
                 }
