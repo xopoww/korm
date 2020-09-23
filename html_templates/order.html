@@ -6,6 +6,8 @@
 </head>
 <body>
 
+{{template "header" .header}}
+
 <h4>Select dishes:</h4> <br>
 <form name="order">
     {{if .dishes_error}}
@@ -27,6 +29,9 @@
     {{end}}
 </form>
 <div id="status"></div>
+
+{{template "footer"}}
+
 <script>
     let order_form = document.forms["order"]
     let status = document.querySelector("#status")
@@ -43,7 +48,7 @@
             }
         }
 
-        fetch("/api/order?items=" + JSON.stringify(order))
+        fetch("/api/order?serve_html=true&items=" + JSON.stringify(order))
             .then(function(response){
                 if (response.ok) {
                     return response.json()

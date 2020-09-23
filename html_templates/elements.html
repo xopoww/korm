@@ -1,0 +1,16 @@
+{{define "header"}}
+    <div class="head">
+        <table style="width: 100%">
+            <tr>
+                <td style="float: right"><h1><a href="/admin">KORM Admin page</a></h1></td>
+                {{if .numOrders}}<td style="float: right"><h2>Orders today: {{.numOrders}}</h2></td>{{end}}
+            </tr>
+        </table>
+    </div>
+{{end}}
+
+{{define "footer"}}
+    <div style="float: bottom">
+        <div style="float: right">© xopoww 2020</div>
+    </div>
+{{end}}

@@ -22,12 +22,8 @@
     </style>
 </head>
 <body>
-<div class="head">
-    <div style="float: left"><h1>KORM Admin page</h1></div>
-    <div style="float: right"><h2>Orders today: {{.NumOrders}}</h2></div>
-</div>
 
-<br>
+{{template "header" .header}}
 
 <div class="main">
     <h2>Welcome, {{.name}}!</h2>
@@ -53,5 +49,8 @@
         </table>
     {{end}}
 </div>
+
+{{template "footer"}}
+
 </body>
 </html>

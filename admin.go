@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
 	"html/template"
@@ -20,15 +21,19 @@ const (
 
 func setAdminSubroutes(s *mux.Router){
 
+	// global getters:
+	globGetters["header"] = func(*http.Request)(data map[string]interface{}){
+		data = make(map[string]interface{})
+		// TODO: retrieve actual number of orders
+		data["numOrders"] = "∞"
+		return
+	}
+
 	// login
 	loginHandler := &templateHandler{
 		filename: "login.html",
-		getter: func(r * http.Request)map[string]interface{}{
-			return map[string]interface{}{
-				"host": host,
-				"wsEndpoint": loginWsEndpoint,
-			}
-		},
+		getter: nil,
+		globGetters: []string{"header"},
 	}
 	s.Handle("/login", loginHandler)
 
@@ -57,6 +62,7 @@ func setAdminSubroutes(s *mux.Router){
 				"dish": dish,
 			}
 		},
+		globGetters: []string{"header"},
 	}
 	s.Handle("/dishes/{id:[0-9]+}", mustAuth(dishHandler))
 
@@ -76,6 +82,7 @@ func setAdminSubroutes(s *mux.Router){
 			}
 			return
 		},
+		globGetters: []string{"header"},
 	}
 	s.Handle("/order", mustAuth(orderHandler))
 
@@ -106,6 +113,7 @@ func setAdminSubroutes(s *mux.Router){
 			}
 			return
 		},
+		globGetters: []string{"header"},
 	}
 	s.Handle("", mustAuth(homeHandler))
 
@@ -186,11 +194,16 @@ func mustAuthAPI(next http.Handler) http.Handler {
 templateHandler handles an html template specified by filename.
 If a request-dependent data is needed for template execution, getter func must be specified
 */
+
+type tmplGetter func(* http.Request)map[string]interface{}
+var globGetters = make(map[string]tmplGetter)
+
 type templateHandler struct {
 	filename string
 	once sync.Once
 	tmpl *template.Template
-	getter func(* http.Request)map[string]interface{}
+	getter tmplGetter
+	globGetters []string
 }
 func (h * templateHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 	// parse template only once
@@ -202,12 +215,29 @@ func (h * templateHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 			aaLogger.Errorf("Error parsing template: %s", err)
 			return
 		}
+		h.tmpl.Funcs(template.FuncMap{
+			"formatJSON": func(data interface{})string{
+				formatted, err := json.MarshalIndent(data, "", "    ")
+				if err != nil {
+					return "error: " + err.Error()
+				}
+				return string(formatted)
+			},
+		})
 	})
 
 	// retrieve data for execution via getter (if present)
-	var data map[string]interface{}
+	var data = make(map[string]interface{})
 	if h.getter != nil {
 		data = h.getter(r)
+	}
+
+	for _, getterName := range h.globGetters {
+		if getter, found := globGetters[getterName]; found {
+			data[getterName] = getter(r)
+		} else {
+			aaLogger.Warningf("Unknown global getter: \"%s\"", getterName)
+		}
 	}
 
 	// execute the template

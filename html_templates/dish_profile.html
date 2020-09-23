@@ -5,7 +5,9 @@
     <title>Dishes - {{if .error}}error{{else}}{{.dish.Name}}{{end}}</title>
 </head>
 <body>
-<h1>KORM Admin page</h1>
+
+{{template "header" .header}}
+
 {{if .error}}
     <h2>Error:</h2>
     <h3>{{.error}}</h3>
@@ -17,5 +19,8 @@
             <div>{{if .Quantity}} {{.Quantity}} left in stock {{else}} Sold out {{end}}</div>
     {{end}}
 {{end}}
+
+{{template "footer"}}
+
 </body>
 </html>
