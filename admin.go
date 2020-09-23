@@ -296,23 +296,3 @@ func checkAuthToken(token, username string)bool {
 	}
 	return bytes.Equal(tokenBytes, createAuthToken(username))
 }
-
-
-func methodAuthCheck(r * http.Request)(map[string]interface{}, error) {
-	username := r.Form.Get("username")
-	password := r.Form.Get("password")
-
-	err := checkAdmin(username, password)
-	if err != nil {
-		return respondError(err)
-	}
-
-	token := createAuthToken(username)
-	tokenHex := make([]byte, hex.EncodedLen(len(token)))
-	hex.Encode(tokenHex, token)
-
-	return map[string]interface{}{
-		"ok": true,
-		"token": string(tokenHex),
-	}, nil
-}

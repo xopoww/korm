@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -173,5 +174,25 @@ var Methods = map[string]apiMethod{
 		}
 
 		return map[string]interface{}{"ok": true}, nil
+	},
+
+	// authenticate a user
+	"auth": func(r * http.Request)(map[string]interface{}, error){
+		username := r.Form.Get("username")
+		password := r.Form.Get("password")
+
+		err := checkAdmin(username, password)
+		if err != nil {
+			return respondError(err)
+		}
+
+		token := createAuthToken(username)
+		tokenHex := make([]byte, hex.EncodedLen(len(token)))
+		hex.Encode(tokenHex, token)
+
+		return map[string]interface{}{
+			"ok": true,
+			"token": string(tokenHex),
+		}, nil
 	},
 }

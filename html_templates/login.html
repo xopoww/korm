@@ -34,7 +34,7 @@
 </head>
 <body>
 
-{{template "header" .header}}
+{{template "header"}}
 
 <div style="text-align: center;">
     <h3>Login to proceed:</h3>
@@ -65,7 +65,7 @@
         let username = this.username.value
         let password = this.password.value
 
-        fetch("/admin/auth?username=" + username + "&password=" + password)
+        fetch("/api/auth?username=" + username + "&password=" + password)
             .then(function( response ){
                 if (response.ok) {
                     return response.json()
