@@ -38,8 +38,8 @@
 
         let field
         for (field of this.elements) {
-            if (field.type === "number" && field.value !== 0) {
-                order.push({dish_id: parseInt(field.name, 10), quantity: field.value})
+            if (field.type === "number" && field.value !== "0") {
+                order.push({dish_id: parseInt(field.name, 10), quantity: parseInt(field.value, 10)})
             }
         }
 
