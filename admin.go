@@ -209,7 +209,10 @@ func (h * templateHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 	// parse template only once
 	h.once.Do(func(){
 		var err error
-		h.tmpl, err = template.ParseFiles(filepath.Join("html_templates", h.filename))
+		h.tmpl, err = template.ParseFiles(
+			filepath.Join("html_templates", h.filename),
+			filepath.Join("html_templates", "elements.html"),
+			)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			aaLogger.Errorf("Error parsing template: %s", err)
