@@ -248,9 +248,9 @@ func (h * templateHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 		err = h.tmpl.Execute(w, data)
 	} else {
 		err = errors.New("template is nil")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		aaLogger.Errorf("Error executing a template: %s", err)
 	}
 }
