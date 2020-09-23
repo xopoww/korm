@@ -48,9 +48,9 @@ func setApiSubroutes (s *mux.Router) {
 		},
 	}
 
+	s.Handle("/auth", apiMethod(authMethod))
 	// TODO: fix mustAuth to check for "serve_html" value
-	s.Use(mustAuthAPI)
-	s.Handle("/{method:[a-zA-Z_]+}", handler)
+	s.Handle("/{method:[a-zA-Z_]+}", mustAuthAPI(handler))
 }
 
 // apiHandler wraps templateHandler. When serving a request, it check for URL Query value "serve_html".
@@ -83,7 +83,27 @@ func (h * apiHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 		return
 	}
 
-	response, err := method(r)
+	method.ServeHTTP(w, r)
+	return
+}
+
+// ======== methods ========
+
+// apiMethod is the underlying function type for all API methods.
+// It accepts a request (on which the ParseForm has already been called),
+// retrieves the variables it needs from URL Query and executes the actions needed.
+// If during one of these steps an internal (server fault) error is encountered, it returns nil map and this error.
+// If an error is encountered due to client's fault, it returns a nil error and a map of the following structure:
+// 		"ok": false,
+//		"error": message, explaining an error,
+// After a successful execution, it returns a map with field "ok" set to true and (possibly) other fields containing
+// the result of the execution.
+type apiMethod func(*http.Request)(map[string]interface{}, error)
+
+// apiMethod can act as an independent http.Handler.
+// In this case the method response object is sent as JSON.
+func (m apiMethod) ServeHTTP(w http.ResponseWriter, r * http.Request) {
+	response, err := m(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -100,19 +120,6 @@ func (h * apiHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 	}
 	return
 }
-
-// ======== methods ========
-
-// apiMethod is the underlying function type for all API methods.
-// It accepts a request (on which the ParseForm has already been called),
-// retrieves the variables it needs from URL Query and executes the actions needed.
-// If during one of these steps an internal (server fault) error is encountered, it returns nil map and this error.
-// If an error is encountered due to client's fault, it returns a nil error and a map of the following structure:
-// 		"ok": false,
-//		"error": message, explaining an error,
-// After a successful execution, it returns a map with field "ok" set to true and (possibly) other fields containing
-// the result of the execution.
-type apiMethod func(*http.Request)(map[string]interface{}, error)
 
 // Convenience function that takes an error and returns formatted apiMethod response and nil error.
 // Must be used inside an apiMethod like this:
@@ -175,24 +182,23 @@ var Methods = map[string]apiMethod{
 
 		return map[string]interface{}{"ok": true}, nil
 	},
+}
 
-	// authenticate a user
-	"auth": func(r * http.Request)(map[string]interface{}, error){
-		username := r.Form.Get("username")
-		password := r.Form.Get("password")
+func authMethod(r * http.Request)(map[string]interface{}, error){
+	username := r.Form.Get("username")
+	password := r.Form.Get("password")
 
-		err := checkAdmin(username, password)
-		if err != nil {
-			return respondError(err)
-		}
+	err := checkAdmin(username, password)
+	if err != nil {
+		return respondError(err)
+	}
 
-		token := createAuthToken(username)
-		tokenHex := make([]byte, hex.EncodedLen(len(token)))
-		hex.Encode(tokenHex, token)
+	token := createAuthToken(username)
+	tokenHex := make([]byte, hex.EncodedLen(len(token)))
+	hex.Encode(tokenHex, token)
 
-		return map[string]interface{}{
-			"ok": true,
-			"token": string(tokenHex),
-		}, nil
-	},
+	return map[string]interface{}{
+		"ok": true,
+		"token": string(tokenHex),
+	}, nil
 }
