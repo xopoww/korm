@@ -19,14 +19,14 @@
             <h3>Internal error:</h3>
             {{.error}}.
         {{else}}
-            {{if response.ok}}
+            {{if .response.ok}}
                 <div class="result">Success.</div>
             {{else}}
                 <div class="result">Error:</div> {{.response.error}}.
             {{end}}
             <details>
                 <summary><b>Full server response:</b></summary>
-                {{call formatJSON .response}}
+                {{formatJSON .response}}
             </details>
         {{end}}
     {{end}}

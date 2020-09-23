@@ -209,7 +209,15 @@ func (h * templateHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 	// parse template only once
 	h.once.Do(func(){
 		var err error
-		h.tmpl, err = template.ParseFiles(
+		h.tmpl, err = template.New(h.filename).Funcs(template.FuncMap{
+			"formatJSON": func(data interface{})string{
+				formatted, err := json.MarshalIndent(data, "", "    ")
+				if err != nil {
+					return "error: " + err.Error()
+				}
+				return string(formatted)
+			},
+		}).ParseFiles(
 			filepath.Join("html_templates", h.filename),
 			filepath.Join("html_templates", "elements.html"),
 			)
@@ -218,15 +226,6 @@ func (h * templateHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 			aaLogger.Errorf("Error parsing template: %s", err)
 			return
 		}
-		h.tmpl.Funcs(template.FuncMap{
-			"formatJSON": func(data interface{})string{
-				formatted, err := json.MarshalIndent(data, "", "    ")
-				if err != nil {
-					return "error: " + err.Error()
-				}
-				return string(formatted)
-			},
-		})
 	})
 
 	// retrieve data for execution via getter (if present)
