@@ -185,10 +185,15 @@ var Methods = map[string]apiMethod{
 }
 
 func authMethod(r * http.Request)(map[string]interface{}, error){
+	err := r.ParseForm()
+	if err != nil {
+		return respondError(err)
+	}
+
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 
-	err := checkAdmin(username, password)
+	err = checkAdmin(username, password)
 	if err != nil {
 		return respondError(err)
 	}
