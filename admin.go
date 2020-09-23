@@ -118,7 +118,7 @@ func setAdminSubroutes(s *mux.Router){
 	s.Handle("", mustAuth(homeHandler))
 
 	// auth
-	s.HandleFunc("/auth", wrapMethod(methodAuthCheck))
+	//s.HandleFunc("/auth", wrapMethod(methodAuthCheck))
 
 	return
 }
