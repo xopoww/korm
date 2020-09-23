@@ -18,7 +18,7 @@
                     <tr>
                         <td>{{.Name}}</td>
                         <td>{{.Quantity}}</td>
-                        <td><input type="number" min="0" max="{{.Quantity}}" value="0" name="dish{{.ID}}"></td>
+                        <td><input type="number" min="0" max="{{.Quantity}}" value="0" name="{{.ID}}"></td>
                     </tr>
                 {{end}}
             {{end}}
@@ -31,29 +31,27 @@
     let order_form = document.forms["order"]
     let status = document.querySelector("#status")
 
-    order_form.onsubmit = function( event ) {
+    order_form.onsubmit = function(event) {
         event.preventDefault()
 
         let order = []
-        {{with .dishes}}
-        {{range . }}
-        {{$dish := printf "dish%d" .ID }}
-            let {{print $dish}} = this.{{print $dish}}.value
-            if ({{print $dish}} !== 0) {
-                order.push({"dish_id": {{.ID}}, "quantity": {{print $dish}} })
+
+        let field
+        for (field of this.elements) {
+            if (field.type === "number" && field.value !== 0) {
+                order.push({dish_id: parseInt(field.name, 10), quantity: field.value})
             }
-        {{end}}
-        {{end}}
+        }
 
         fetch("/api/order?items=" + JSON.stringify(order))
-            .then(function( response ){
+            .then(function(response){
                 if (response.ok) {
                     return response.json()
                 } else {
                     status.innerHTML = "an error occurred, try again later"
                 }
             })
-            .then(async function( respJSON ){
+            .then(async function(respJSON){
                 if (respJSON["ok"]) {
                     alert("Order successful!")
                     await new Promise(r => setTimeout(r, 3000))
@@ -62,7 +60,7 @@
                     status.innerHTML = "API error: " + respJSON["error"]
                 }
             })
-            .catch(function( error ){
+            .catch(function(error){
                 console.log(error)
             })
     }
