@@ -86,6 +86,24 @@ func setAdminSubroutes(s *mux.Router){
 	}
 	s.Handle("/order", mustAuth(orderHandler))
 
+	// new dish
+	newDishHandler := &templateHandler{
+		filename: "new_dish.html",
+		getter: func(*http.Request)(data map[string]interface{}){
+			data = make(map[string]interface{})
+
+			kinds, err := getDishKinds()
+			if err != nil {
+				data["error"] = err.Error()
+				return
+			}
+			data["kinds"] = kinds
+			return
+		},
+		globGetters: []string{"header"},
+	}
+	s.Handle("/new_dish", mustAuth(newDishHandler))
+
 	// home
 	homeHandler := &templateHandler{
 		filename: "home.html",

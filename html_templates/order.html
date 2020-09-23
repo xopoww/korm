@@ -48,26 +48,8 @@
             }
         }
 
-        fetch("/api/order?serve_html=true&items=" + JSON.stringify(order))
-            .then(function(response){
-                if (response.ok) {
-                    return response.json()
-                } else {
-                    status.innerHTML = "an error occurred, try again later"
-                }
-            })
-            .then(async function(respJSON){
-                if (respJSON["ok"]) {
-                    alert("Order successful!")
-                    await new Promise(r => setTimeout(r, 3000))
-                    window.open("/admin", "_self")
-                } else {
-                    status.innerHTML = "API error: " + respJSON["error"]
-                }
-            })
-            .catch(function(error){
-                console.log(error)
-            })
+        open("/api/order?serve_html=true&items=" + JSON.stringify(order), "_self")
+        return false
     }
 
 </script>

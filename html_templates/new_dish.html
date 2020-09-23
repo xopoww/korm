@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add new dish</title>
+</head>
+<body>
+
+{{template "header" .header }}
+
+<div style="margin-left: 50px">
+    {{if .error}}
+    <h3>An error occurred: {{.error}}</h3>
+    {{else}}
+
+    <form action="/api/new_dish" id="new-dish">
+        <table>
+            <tr><td><label for="name">Name of a dish:</label></td>
+                <td><input id="name" name="name" type="text" maxlength="25" required></td></tr>
+
+            <tr><td><label for="desc">Description (optional):</label></td><td></td></tr>
+            <tr><td colspan="2"><textarea id="desc" name="description" form="new-dish" rows="2" ></textarea></td></tr>
+
+            <tr><td><label for="qtty">Quantity:</label></td><td><input id="qtty" name="quantity" type="number" min="0" required></td></tr>
+
+            <tr><td><label for="kind">Kind:</label></td><td>
+                    <select id="kind" name="kind" size="1" form="new-dish" required>
+                        {{range .kinds}}
+                            <option value="{{.ID}}">{{.Description}}</option>
+                        {{end}}
+                    </select>
+                </td></tr>
+        </table>
+        <input type="submit" value="Add dish">
+        <input style="display: none" name="serve_html" value="true">
+    </form>
+    {{end}}
+</div>
+
+{{template "footer"}}
+
+</body>
+</html>

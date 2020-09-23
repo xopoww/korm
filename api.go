@@ -129,7 +129,7 @@ func respondError(err error)(map[string]interface{}, error) {
 // Map of all existing API methods
 var Methods = map[string]apiMethod{
 	// add dish record to the database
-	"add_dish": func(r * http.Request)(map[string]interface{}, error) {
+	"new_dish": func(r * http.Request)(map[string]interface{}, error) {
 		name := r.Form.Get("name")
 		if name == "" {
 			return respondError(errors.New("missing parameter: name"))

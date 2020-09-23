@@ -529,3 +529,19 @@ func makeOrder(uid int, items []OrderItem) error {
 	}
 	return nil
 }
+
+
+type DishKind struct {
+	ID				int
+	Description		string
+}
+
+func getDishKinds()([]DishKind, error) {
+	// TODO: actually implement
+
+	return []DishKind{
+		DishKind{1, "food"},
+		DishKind{2, "soup"},
+		DishKind{3, "drink"},
+	}, nil
+}
