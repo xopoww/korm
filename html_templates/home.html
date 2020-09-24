@@ -1,60 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
-    <style>
-        div.right-bar {
-            background: beige;
-            border: slategrey;
-            float: right;
-        }
-
-        div.head {
-            float: top;
-            background: burlywood;
-            overflow: hidden;
-        }
-
-        div.err {
-            color: red;
-        }
-    </style>
+    <title>KORM - Home</title>
+    {{template "style"}}
 </head>
 <body>
+<div class="grid-container">
 
 {{template "header" .header}}
 
-<div class="main">
-    <h2>Welcome, {{.name}}!</h2>
-    <ul>
-        <li><a href="/admin/order">Make an order</a></li>
-        <li><a href="/admin/new_dish">Add new dish</a></li>
-    </ul>
-</div>
+<div class="body">
+    <div class="left">
+        <h2>Добро пожаловать, {{.name}}!</h2>
+        <ul>
+            <li><a href="/admin/order">Оформить заказ</a></li>
+            <li><a href="/admin/new_dish">Добавить новое блюдо</a></li>
+        </ul>
+    </div>
 
-<div class="right-bar">
-    <h4>Dishes:</h4> <br>
-    {{if .dishes_error}}
-        <div class="err">{{.dishes_error}}</div>
-    {{else}}
-        <table>
-                <tr><th colspan="2">Name</th><th>Quantity</th><th></th></tr>
+    <div class="right menu">
+        <h4>Блюда:</h4> <br>
+        {{if .dishes_error}}
+            <div class="err">{{.dishes_error}}</div>
+        {{else}}
+            <table class="menu">
+                <tr><th colspan="2">Название</th><th>кол-во</th><th></th></tr>
                 {{with .dishes}}
                     {{range . }}
-                        <tr>
+                        <tr class="item">
                             <td>{{.Name}}</td>
-                            <td>({{.KindDesc}})</td>
+                            <td><i>({{.KindDesc}})</i></td>
                             <td>{{.Quantity}}</td>
-                            <td><a href="/admin/dishes/{{.ID}}">more info</a></td>
+                            <td><a href="/admin/dishes/{{.ID}}">профиль</a></td>
                         </tr>
                     {{end}}
                 {{end}}
-        </table>
-    {{end}}
+            </table>
+        {{end}}
+    </div>
 </div>
+
+
 
 {{template "footer"}}
 
+</div>
 </body>
 </html>

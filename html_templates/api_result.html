@@ -2,39 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>API - {{if .critical}}error{{else}}{{.method}}{{end}}</title>
+    <title>KORM API - {{if .critical}}error{{else}}{{.method}}{{end}}</title>
+    {{template "style"}}
 </head>
 <body>
+<div class="grid-container">
 
 {{template "header"}}
 
-<div style="text-align: center;">
+<div class="body">
     {{if .critical}}
-    <h2>Critical error:</h2>
+    <h2>Критическая ошибка:</h2>
     <h3>{{.critical}}</h3>
     {{else}}
 
-        <h2>{{.method}} result:</h2>
+        <h2>Метод {{.method}}:</h2>
         {{if .error}}
-            <h3>Internal error:</h3>
+            <h3>Внутрення ошибка сервера:</h3>
             {{.error}}.
         {{else}}
             {{if .response.ok}}
-                <div class="result">Success.</div>
+                <div class="result">Успешно.</div>
             {{else}}
-                <div class="result">Error:</div> {{.response.error}}.
+                <div class="result">Ошибка:</div> {{.response.error}}.
             {{end}}
             <details>
-                <summary><b>Full server response:</b></summary>
-                <div style="text-align: left"><pre>{{formatJSON .response}}</pre></div>
+                <summary><b>Полный ответ сервера:</b></summary>
+                <pre>{{formatJSON .response}}</pre>
             </details>
         {{end}}
     {{end}}
     <hr>
-    Click <a href="/admin">here</a> to go back to the home page.
+    Нажми <a href="/admin">сюда,</a> чтобы вернуться на главную страницу.
 </div>
 
 {{template "footer"}}
 
+</div>
 </body>
 </html>

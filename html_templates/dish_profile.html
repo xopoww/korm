@@ -2,35 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dishes - {{if .error}}error{{else}}{{.dish.Name}}{{end}}</title>
+    <title>KORM - {{if .error}}error{{else}}{{.dish.Name}}{{end}}</title>
 </head>
 <body>
+<div class="grid-container">
 
 {{template "header" .header}}
 
+<div class="body">
 {{if .error}}
-    <h2>Error:</h2>
+    <h2>Ошибка:</h2>
     <h3>{{.error}}</h3>
 {{else}}
     {{with .dish}}
         <h3>{{.Name}}</h3>
-            <h4>{{.KindDesc}}</h4>
-            <hr>
-            <p>{{if .Description}}{{.Description}}{{else}}No description.{{end}}</p>
-            <div>{{if .Quantity}} {{.Quantity}} left in stock {{else}} Sold out {{end}}</div>
+        <h4>{{.KindDesc}}</h4>
+        <hr>
+        <p><i>{{if .Description}}{{.Description}}{{else}}Без описания.{{end}}</i></p>
+        <div>{{if .Quantity}} {{.Quantity}} осталось.{{else}}Sold out{{end}}</div>
         <form name="add-dish" action="/api/add_dish">
-            <input type="submit" value="Add potions">
-            <input name="delta" type="number" min="1" required placeholder="quantity">
+            <input type="submit" value="Добавить порции">
+            <input name="delta" type="number" min="1" required placeholder="кол-во">
             <input style="display: none" name="id" value="{{.ID}}">
             <input style="display: none" name="serve_html" value="true">
         </form>
-
-        <button id="del">Delete dish</button>
+        <button id="del">Удалить блюдо</button>
     {{end}}
 {{end}}
+</div>
 
 {{template "footer"}}
 
+</div>
 <script>
     let del = document.querySelector("#del")
 

@@ -2,60 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login page</title>
+    <title>KORM - Login</title>
 
-    <style>
-        input:invalid {
-            border: 2px dashed red;
-        }
-
-        input:valid {
-            border: 2px solid black;
-        }
-
-        input[type="text"],[type="password"] {
-            background: azure;
-        }
-
-        input:disabled {
-            background: indianred;
-        }
-
-        div.row {
-            margin: 3px;
-        }
-
-        form {
-            border: 2px darkgrey;
-            background: beige;
-            border-radius: 6px;
-        }
-    </style>
+    {{template "style"}}
 </head>
 <body>
+<div class="grid-container">
 
 {{template "header"}}
 
-<div style="text-align: center;">
-    <h3>Login to proceed:</h3>
+<div class="body">
+    <div class="whole">
+        <div class="menu" style="width: 40%">
+            <h3>Войдите в систему, чтобы продолжить:</h3>
 
-    <form name="login">
-        <div class="row">
-            <label>username: <input type="text" name="username" required pattern="[a-zA-Z0-9 ]+" maxlength="15"></label>
+            <form name="login">
+                <div class="row">
+                    <label>username: <input type="text" name="username" required pattern="[a-zA-Z0-9 ]+" maxlength="15"></label>
+                </div>
+                <div class="row">
+                    <label>password: <input type="password" name="password" required></label>
+                </div>
+                <div class="row">
+                    <input type="submit" value="Войти" id="submit">
+                </div>
+            </form>
+            <div id="status"></div>
         </div>
-        <div class="row">
-            <label>password: <input type="password" name="password" required></label>
-        </div>
-        <div class="row">
-            <input type="submit" value="Sign in" id="submit">
-        </div>
-    </form>
-    <hr>
-    <div id="status"></div>
+    </div>
 </div>
 
 {{template "footer"}}
-
+</div>
 <script>
     let status = document.querySelector("#status")
 
@@ -70,7 +48,7 @@
                 if (response.ok) {
                     return response.json()
                 } else {
-                    status.innerHTML = "an error occurred, try again later"
+                    status.innerHTML = "произошла ошибка, повторите запрос позже"
                 }
             })
             .then(function( respJSON ){
@@ -79,7 +57,7 @@
                     document.cookie = "auth=" + respJSON["token"] + ";path=/"
                     window.open("/admin", "_self")
                 } else {
-                    status.innerHTML = "wrong username or password"
+                    status.innerHTML = "неверное имя пользователя или пароль"
                 }
             })
             .catch(function( error ){

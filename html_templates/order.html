@@ -2,36 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Make order</title>
+    <title>KORM - оформление заказа</title>
+    {{template "style"}}
 </head>
 <body>
+<div class="grid-container">
 
 {{template "header" .header}}
 
-<h4>Select dishes:</h4> <br>
-<form name="order">
+<div class="body">
+    <h4>Выберите блюда:</h4>
     {{if .dishes_error}}
-        <div class="err">{{.dishes_error}}</div>
+    <div class="err">{{.dishes_error}}</div>
     {{else}}
-        <table>
-            <tr><th>Name</th><th>In stock</th><th>Quantity</th></tr>
-            {{with .dishes}}
-                {{range . }}
-                    <tr>
-                        <td>{{.Name}}</td>
-                        <td>{{.Quantity}}</td>
-                        <td><input type="number" min="0" max="{{.Quantity}}" value="0" name="{{.ID}}"></td>
-                    </tr>
+    <form name="order">
+            <table class="menu">
+                <tr><th colspan="2">Название блюда</th><th>В наличии</th><th>Заказать</th></tr>
+                {{with .dishes}}
+                    {{range . }}
+                        <tr class="item">
+                            <td>{{.Name}}</td>
+                            <td><i>({{.KindDesc}})</i></td>
+                            <td>{{.Quantity}}</td>
+                            <td><input type="number" min="0" max="{{.Quantity}}" value="0" name="{{.ID}}"></td>
+                        </tr>
+                    {{end}}
                 {{end}}
-            {{end}}
-        </table>
-        <input type="submit" value="Order">
+            </table>
+            <input type="submit" value="Оформить заказ">
+    </form>
     {{end}}
-</form>
-<div id="status"></div>
+    <div id="status"></div>
+</div>
 
 {{template "footer"}}
 
+</div>
 <script>
     let order_form = document.forms["order"]
     let status = document.querySelector("#status")
