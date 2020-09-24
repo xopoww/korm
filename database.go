@@ -362,7 +362,7 @@ type Dish struct {
 	Quantity		int
 }
 
-func addDish(name, description string, quantity int)(int, error) {
+func newDish(name, description string, quantity int)(int, error) {
 	ra, err := db.Exec(`INSERT INTO "Dishes" (name, description, quantity) VALUES ($1, $2, $3)`,
 		name, description, quantity)
 	if err != nil {
@@ -466,6 +466,26 @@ func subDish(id, delta int, tx *sql.Tx)error {
 	}
 	return nil
 }
+
+func delDish(id int) error {
+	r, err := db.Exec(`DELETE FROM Dishes WHERE id = $1`, id)
+	if err != nil {
+		return err
+	}
+	numRows, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if numRows == 0 {
+		return &ErrBadID{table: "Dishes"}
+	}
+	return nil
+}
+
+func addDish(id, delta int) error {
+	return subDish(id, -delta, nil)
+}
+
 
 type OrderItem struct {
 	DishID		int		`json:"dish_id"`

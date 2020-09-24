@@ -17,10 +17,30 @@
             <hr>
             <p>{{if .Description}}{{.Description}}{{else}}No description.{{end}}</p>
             <div>{{if .Quantity}} {{.Quantity}} left in stock {{else}} Sold out {{end}}</div>
+        <form name="add-dish" action="/api/add_dish">
+            <input type="submit" value="Add potions">
+            <input name="delta" type="number" min="1" required placeholder="quantity">
+            <input style="display: none" name="id" value="{{.ID}}">
+            <input style="display: none" name="serve_html" value="true">
+        </form>
+
+        <button id="del">Delete dish</button>
     {{end}}
 {{end}}
 
 {{template "footer"}}
+
+<script>
+    let del = document.querySelector("#del")
+
+    del.onclick = function() {
+        if (confirm("Are you sure you want to delete this dish? This cannot be undone.")) {
+            window.open("/api/del_dish?id={{.dish.ID}}&serve_html=true", "_self")
+        }
+
+        return true
+    }
+</script>
 
 </body>
 </html>

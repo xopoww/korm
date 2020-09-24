@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -128,9 +127,13 @@ func (m apiMethod) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 //			return respondError(err)
 //		}
 func respondError(err error)(map[string]interface{}, error) {
+	return respondErrMsg(err.Error())
+}
+
+func respondErrMsg(msg string)(map[string]interface{}, error) {
 	return map[string]interface{}{
 		"ok": false,
-		"error": err.Error(),
+		"error": msg,
 	}, nil
 }
 
@@ -140,19 +143,19 @@ var Methods = map[string]apiMethod{
 	"new_dish": func(r * http.Request)(map[string]interface{}, error) {
 		name := r.Form.Get("name")
 		if name == "" {
-			return respondError(errors.New("missing parameter: name"))
+			return respondErrMsg("missing parameter: name")
 		}
 		description := r.Form.Get("description")
 		quantityS := r.Form.Get("quantity")
 		if quantityS == "" {
-			return respondError(errors.New("missing parameter: quantity"))
+			return respondErrMsg("missing parameter: quantity")
 		}
 		quantity, err := strconv.ParseInt(quantityS, 10, 0)
 		if err != nil {
 			return respondError(err)
 		}
 
-		id, err := addDish(name, description, int(quantity))
+		id, err := newDish(name, description, int(quantity))
 		if err != nil {
 			return nil, err
 		}
@@ -167,7 +170,7 @@ var Methods = map[string]apiMethod{
 	"order": func(r * http.Request)(map[string]interface{}, error) {
 		itemsJSON := r.Form.Get("items")
 		if itemsJSON == "" {
-			return respondError(errors.New("missing parameter: items"))
+			return respondErrMsg("missing parameter: items")
 		}
 		var items []OrderItem
 		err := json.Unmarshal([]byte(itemsJSON), &items)
@@ -181,6 +184,57 @@ var Methods = map[string]apiMethod{
 		}
 
 		return map[string]interface{}{"ok": true}, nil
+	},
+
+	// add portions to an existing dish
+	"add_dish": func(r * http.Request)(map[string]interface{}, error) {
+		idS := r.Form.Get("id")
+		if idS == "" {
+			return respondErrMsg("missing parameter: id")
+		}
+		id, err := strconv.ParseInt(idS, 10, 0)
+		if err != nil {
+			return respondError(err)
+		}
+
+		deltaS := r.Form.Get("delta")
+		if deltaS == "" {
+			return respondErrMsg("missing parameter: delta")
+		}
+		delta, err := strconv.ParseInt(deltaS, 10, 0)
+		if err != nil {
+			return respondError(err)
+		}
+
+		err = addDish(int(id), int(delta))
+		if err != nil {
+			return respondError(err)
+		}
+
+		return map[string]interface{}{
+			"ok": true,
+		}, nil
+	},
+
+	// delete a dish record
+	"del_dish": func(r * http.Request)(map[string]interface{}, error) {
+		idS := r.Form.Get("id")
+		if idS == "" {
+			return respondErrMsg("missing parameter: id")
+		}
+		id, err := strconv.ParseInt(idS, 10, 0)
+		if err != nil {
+			return respondError(err)
+		}
+
+		err = delDish(int(id))
+		if err != nil {
+			return respondError(err)
+		}
+
+		return map[string]interface{}{
+			"ok": true,
+		}, nil
 	},
 }
 
