@@ -379,7 +379,7 @@ func newDish(name, description string, quantity, kind int)(int, error) {
 
 func getDishes()([]Dish, error) {
 	r, err := db.Query(
-		`SELECT id, name, Dishes.description, quantity, DishKinds.description FROM Dishes JOIN DishKinds`)
+		`SELECT Dishes.id, name, Dishes.description, quantity, DishKinds.description FROM Dishes JOIN DishKinds`)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +399,8 @@ func getDishes()([]Dish, error) {
 
 func getDishByID(id int)(Dish, error){
 	r, err := db.Query(
-		`SELECT name, Dishes.description, quantity, DishKinds.description FROM Dishes JOIN DishKinds WHERE id = $1`,
+		`SELECT name, Dishes.description, quantity, DishKinds.description` +
+			`FROM Dishes JOIN DishKinds WHERE Dishes.id = $1`,
 		id)
 	if err != nil {
 		return Dish{}, err
