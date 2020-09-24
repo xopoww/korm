@@ -360,15 +360,16 @@ type Dish struct {
 	Name			string
 	Description		string
 	Quantity		int
+	KindDesc		string
 }
 
-func newDish(name, description string, quantity int)(int, error) {
-	ra, err := db.Exec(`INSERT INTO "Dishes" (name, description, quantity) VALUES ($1, $2, $3)`,
-		name, description, quantity)
+func newDish(name, description string, quantity, kind int)(int, error) {
+	ra, err := db.Exec(`INSERT INTO "Dishes" (name, description, quantity, kind) VALUES ($1, $2, $3, $4)`,
+		name, description, quantity, kind)
 	if err != nil {
 		return 0, err
 	}
-	dbLogger.Infof("Added %d portions of \"%s\" to database.", quantity, name)
+	dbLogger.Infof("Added %d portions of \"%s\" (kind id %d) to database.", quantity, name, kind)
 	id, err := ra.LastInsertId()
 	if err != nil {
 		return 0, err
@@ -377,7 +378,8 @@ func newDish(name, description string, quantity int)(int, error) {
 }
 
 func getDishes()([]Dish, error) {
-	r, err := db.Query(`SELECT id, name, description, quantity FROM Dishes`)
+	r, err := db.Query(
+		`SELECT id, name, Dishes.description, quantity, DishKinds.description FROM Dishes JOIN DishKinds`)
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +388,7 @@ func getDishes()([]Dish, error) {
 	result := make([]Dish, 0)
 	for r.Next() {
 		var d Dish
-		err = r.Scan(&d.ID, &d.Name, &d.Description, &d.Quantity)
+		err = r.Scan(&d.ID, &d.Name, &d.Description, &d.Quantity, &d.KindDesc)
 		if err != nil {
 			return nil, err
 		}
@@ -396,7 +398,9 @@ func getDishes()([]Dish, error) {
 }
 
 func getDishByID(id int)(Dish, error){
-	r, err := db.Query(`SELECT name, description, quantity FROM Dishes WHERE id = $1`, id)
+	r, err := db.Query(
+		`SELECT name, Dishes.description, quantity, DishKinds.description FROM Dishes JOIN DishKinds WHERE id = $1`,
+		id)
 	if err != nil {
 		return Dish{}, err
 	}
@@ -405,7 +409,7 @@ func getDishByID(id int)(Dish, error){
 		return Dish{}, errors.New("no such dish in the database")
 	}
 	dish := Dish{ID: id}
-	err = r.Scan(&dish.Name, &dish.Description, &dish.Quantity)
+	err = r.Scan(&dish.Name, &dish.Description, &dish.Quantity, &dish.KindDesc)
 	if err != nil {
 		return Dish{}, err
 	}
@@ -554,14 +558,24 @@ func makeOrder(uid int, items []OrderItem) error {
 type DishKind struct {
 	ID				int
 	Description		string
+	Price			int
 }
 
 func getDishKinds()([]DishKind, error) {
-	// TODO: actually implement
+	r, err := db.Query(`SELECT * FROM DishKinds`)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+	kinds := make([]DishKind, 0)
+	for r.Next() {
+		var kind DishKind
+		err = r.Scan(&kind.ID, &kind.Description, &kind.Price)
+		if err != nil {
+			return nil, err
+		}
+		kinds = append(kinds, kind)
+	}
 
-	return []DishKind{
-		DishKind{1, "food"},
-		DishKind{2, "soup"},
-		DishKind{3, "drink"},
-	}, nil
+	return kinds, nil
 }

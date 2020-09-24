@@ -39,11 +39,12 @@
         <div class="err">{{.dishes_error}}</div>
     {{else}}
         <table>
-                <tr><th>Name</th><th>Quantity</th><th></th></tr>
+                <tr><th colspan="2">Name</th><th>Quantity</th><th></th></tr>
                 {{with .dishes}}
                     {{range . }}
                         <tr>
                             <td>{{.Name}}</td>
+                            <td>({{.KindDesc}})</td>
                             <td>{{.Quantity}}</td>
                             <td><a href="/admin/dishes/{{.ID}}">more info</a></td>
                         </tr>

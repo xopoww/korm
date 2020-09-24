@@ -34,17 +34,25 @@ CREATE TABLE IF NOT EXISTS "Admins" (
         name        TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "DishTypes" (
+CREATE TABLE IF NOT EXISTS "DishKinds" (
         id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
         description TEXT NOT NULL UNIQUE,
         price       INTEGER NOT NULL
 );
 
+INSERT OR REPLACE INTO DishKinds (description, price) VALUES
+                                                            ('korm', 185),
+                                                            ('drink', 40),
+                                                            ('soup', 75);
+
 CREATE TABLE IF NOT EXISTS "Dishes" (
         id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
         name        TEXT NOT NULL,
         description TEXT,
-        quantity    INTEGER
+        quantity    INTEGER,
+        kind        INTEGER NOT NULL,
+
+        FOREIGN KEY ("kind") REFERENCES DishKinds("id")
 );
 
 

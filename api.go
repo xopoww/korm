@@ -145,7 +145,9 @@ var Methods = map[string]apiMethod{
 		if name == "" {
 			return respondErrMsg("missing parameter: name")
 		}
+
 		description := r.Form.Get("description")
+
 		quantityS := r.Form.Get("quantity")
 		if quantityS == "" {
 			return respondErrMsg("missing parameter: quantity")
@@ -155,7 +157,16 @@ var Methods = map[string]apiMethod{
 			return respondError(err)
 		}
 
-		id, err := newDish(name, description, int(quantity))
+		kindS := r.Form.Get("kind")
+		if kindS == "" {
+			return respondErrMsg("missing parameter: kind")
+		}
+		kind, err := strconv.ParseInt(kindS, 10, 0)
+		if err != nil {
+			return respondError(err)
+		}
+
+		id, err := newDish(name, description, int(quantity), int(kind))
 		if err != nil {
 			return nil, err
 		}
