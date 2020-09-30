@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strconv"
 
-	db "../database"
-	. "../types"
+	db "github.com/xopoww/korm/database"
+	. "github.com/xopoww/korm/types"
 )
 
 func SetApiRoutes (s *mux.Router) {

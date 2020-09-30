@@ -1,10 +1,10 @@
 package database
 
 import (
-	. "../types"
 	"database/sql"
 	"errors"
 	"fmt"
+	. "github.com/xopoww/korm/types"
 )
 
 // 	Add a new dish to the database.

@@ -5,7 +5,6 @@ import (
 	"fmt"
 )
 
-
 // Errors
 var (
 	ErrBadID = errors.New("no such id")

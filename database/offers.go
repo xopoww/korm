@@ -1,8 +1,8 @@
 package database
 
 import (
-	. "../types"
 	"fmt"
+	. "github.com/xopoww/korm/types"
 	"time"
 )
 

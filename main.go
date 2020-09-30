@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	db "./database"
-	"./admin"
+	"github.com/xopoww/korm/admin"
+	db "github.com/xopoww/korm/database"
 )
 
 var locales map[string]locale

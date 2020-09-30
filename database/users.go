@@ -6,8 +6,6 @@ import (
 	"fmt"
 )
 
-
-
 // Check if the user is in the DB by their in-app ID.
 // If vk is true, id is supposed to be VK user ID. Else, it is Telegram user id.
 // Returns uid of the user if the corresponding record exist and 0 if not.

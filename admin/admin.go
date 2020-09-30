@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"sync"
 
-	db "../database"
+	db "github.com/xopoww/korm/database"
 )
 
 const (
