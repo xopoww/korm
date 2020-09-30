@@ -1,5 +1,5 @@
 package main
-
+/*
 import (
 	"fmt"
 	"regexp"
@@ -82,10 +82,10 @@ var (
 	reCommand = regexp.MustCompile("/[^ ]+")
 	reArgument = regexp.MustCompile(" .+")
 )
-/* Parse the text of the message to extract command and argument.
+ Parse the text of the message to extract command and argument.
 The supposed format is "/{command} {argument}".
 Returns empty string (strings) if something wasn't found.
-*/
+
 func parseCommand(text string)(command, argument string) {
 	textBytes := []byte(text)
 	commandBytes := reCommand.Find(textBytes)
@@ -101,3 +101,4 @@ func parseCommand(text string)(command, argument string) {
 	}
 	return
 }
+*/

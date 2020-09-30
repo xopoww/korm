@@ -1,50 +1,28 @@
 package main
 
 import (
-	"bytes"
-	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
-	vk "github.com/xopoww/vk_min_api"
-	tb "gopkg.in/tucnak/telebot.v2"
+	"github.com/sirupsen/logrus"
+
+	//vk "github.com/xopoww/vk_min_api"
+	//tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"math/rand"
-	"path/filepath"
-	"time"
-	"text/template"
-
-	"fmt"
-	"github.com/xopoww/gologs"
 	"net/http"
 	"os"
 	"sync"
-)
+	"time"
 
-var (
-	vkLogger = gologs.NewLogger("VK handler")
-	dbLogger = gologs.NewLogger("SQL handler")
-	tgLogger = gologs.NewLogger("TG handler")
-	aaLogger = gologs.NewLogger("Admin app")
+	db "./database"
+	"./admin"
 )
 
 var locales map[string]locale
 
-var VERBOSE = gologs.LogLevel{Value: 5, Label: "VERBOSE"}
-
 func main() {
 	rand.Seed(time.Now().Unix())
-
-	var lvl gologs.LogLevel
-	if getAnswer("Would you like a verbose debug logging?") {
-		lvl = VERBOSE
-	} else {
-		lvl = gologs.DEBUG
-	}
-	vkLogger.AddWriter(os.Stdout, lvl)
-	tgLogger.AddWriter(os.Stdout, lvl)
-	dbLogger.AddWriter(os.Stdout, lvl)
-	aaLogger.AddWriter(os.Stdout, lvl)
 
 	// messages from JSON
 	var err error
@@ -55,7 +33,7 @@ func main() {
 
 	// main router
 	router := mux.NewRouter()
-
+	/*
 	// VK initialization
 	VK_TOKEN := os.Getenv("VK_TOKEN")
 	vbot, err := vk.NewBot(
@@ -64,9 +42,9 @@ func main() {
 			Version: "5.95",
 			Secret: "testing",
 		},
-		false, &vkLogger)
+		false, nil)
 	if err != nil {
-		vkLogger.Fatalf("error initializing vk bot: %s", err)
+		panic(err)
 	}
 	router.HandleFunc("/vk", vbot.HTTPHandler())
 
@@ -86,105 +64,42 @@ func main() {
 	AddHandlers(
 		&vkBot{vbot},
 		&tgBot{tbot})
+	*/
 
-	// database initialization
-	db, err = sql.Open("sqlite3", filepath.Join(".", dbname))
-	if err != nil {
-		dbLogger.Fatalf("Error opening a database: %s", err)
-		return
-	}
-	defer db.Close()
-	tmpl, err := template.ParseFiles(filepath.Join(".", dbTemplate))
-	if err != nil {
-		dbLogger.Fatalf("Error parsing database creation template: %s", err)
-		return
-	}
-	var script bytes.Buffer
-	dbNames := map[string]interface{}{
-		"VkUsersTable": VkUsersTable,
-		"TgUsersTable": TgUsersTable,
-	}
-	err = tmpl.Execute(&script, dbNames)
-	if err != nil {
-		dbLogger.Fatalf("Error executing database creation template: %s", err)
-		return
-	}
-	_, err = db.Exec(script.String())
-	if err != nil {
-		dbLogger.Fatalf("Error initializing a database: %s", err)
-		return
-	}
-	oldKeysEraser()
-	go orderWorker()
+	// Init a database
+	go db.Start(&logrus.Logger{
+		Out: os.Stdout,
+		Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
+		Level: logrus.DebugLevel,
+	})
 
 	// admin app
-	setAdminSubroutes(router.PathPrefix("/admin").Subrouter())
+	admin.SetAdminRoutes(router.PathPrefix("/admin").Subrouter())
+	admin.SetApiRoutes(router.PathPrefix("/api").Subrouter())
 	// TODO: get rid of this nonsense
-	_ = addAdmin("admin", "admin", "Arseny")
-
-
-	// api
-	setApiSubroutes(router.PathPrefix("/api").Subrouter())
+	_ = db.AddAdmin("admin", "admin", "Arseny")
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
 	go func(){
 		defer waitGroup.Done()
-		vkLogger.Fatalf("Server failed: %s",
+		fmt.Printf("Server failed: %s\n",
 			http.ListenAndServe("", router))
 	}()
 
+	/*
 	go tbot.Start()
 	go func(){
 		vbot.Start()
 		waitGroup.Done()
 	}()
+	*/
 
 	waitGroup.Wait()
 }
 
 // utils
 
-func debugBlock() {
-	var test string
-	fmt.Println("Blocked.")
-	_, _ = fmt.Scanln(&test)
-	fmt.Printf("Unblocked: %s\n", test)
-}
-
-func getAnswer(prompt string)bool {
-	for {
-		fmt.Println(prompt)
-		fmt.Println("[y/n]")
-		var ans string
-		fmt.Scan(&ans)
-
-		switch ans {
-		case "y":
-			return true
-		case "n":
-			return false
-		default:
-			fmt.Println("Unrecognized input.")
-		}
-	}
-}
-
-func getHeader(r *http.Request, key string)string {
-	if values := r.Header["key"]; len(values) > 0 {
-		return values[0]
-	} else {
-		return ""
-	}
-}
-
-func wrapHandler(handler func(http.ResponseWriter, *http.Request)error, logger gologs.Logger)func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := handler(w, r); err != nil {
-			logger.Errorf("Error handling a request: %s", err)
-		}
-	}
-}
 
 const (
 	alphabet = "qwertyuiopasdfghjklzxcvbnm1234567890"

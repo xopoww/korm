@@ -1,15 +1,19 @@
-package main
+package admin
 
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+
+	db "../database"
+	. "../types"
 )
 
-func setApiSubroutes (s *mux.Router) {
+func SetApiRoutes (s *mux.Router) {
 
 	handler := &apiHandler{
 		&templateHandler{
@@ -53,7 +57,7 @@ func setApiSubroutes (s *mux.Router) {
 }
 
 // apiHandler wraps templateHandler. When serving a request, it check for URL Query value "serve_html".
-// If it equals true, it uses underlying template handler for the request, and sends response as plain text otherwise.
+// If it equals true, it uses underlying template handler for the request, and sends response as plain JSON otherwise.
 type apiHandler struct {
 	tmplH		*templateHandler
 }
@@ -94,7 +98,7 @@ func (h * apiHandler) ServeHTTP(w http.ResponseWriter, r * http.Request) {
 // If during one of these steps an internal (server fault) error is encountered, it returns nil map and this error.
 // If an error is encountered due to client's fault, it returns a nil error and a map of the following structure:
 // 		"ok": false,
-//		"error": message, explaining an error,
+//		"error": message, explaining the error,
 // After a successful execution, it returns a map with field "ok" set to true and (possibly) other fields containing
 // the result of the execution.
 type apiMethod func(*http.Request)(map[string]interface{}, error)
@@ -130,6 +134,7 @@ func respondError(err error)(map[string]interface{}, error) {
 	return respondErrMsg(err.Error())
 }
 
+// Same as respondError, but accepts a text message instead of error.
 func respondErrMsg(msg string)(map[string]interface{}, error) {
 	return map[string]interface{}{
 		"ok": false,
@@ -166,7 +171,7 @@ var Methods = map[string]apiMethod{
 			return respondError(err)
 		}
 
-		id, err := newDish(name, description, int(quantity), int(kind))
+		id, err := db.NewDish(name, description, int(quantity), int(kind))
 		if err != nil {
 			return nil, err
 		}
@@ -189,12 +194,15 @@ var Methods = map[string]apiMethod{
 			return respondError(err)
 		}
 
-		err = registerOrder(Order{0, items})
-		if err != nil {
+		err = db.RegisterOrder(&Order{Items: items})
+		switch {
+		case err == nil:
+			return map[string]interface{}{"ok": true}, nil
+		case errors.Is(err, db.ErrBadID), errors.Is(err, db.ErrOutOfStock):
 			return respondError(err)
+		default:
+			return nil, err
 		}
-
-		return map[string]interface{}{"ok": true}, nil
 	},
 
 	// add portions to an existing dish
@@ -217,14 +225,17 @@ var Methods = map[string]apiMethod{
 			return respondError(err)
 		}
 
-		err = addDish(int(id), int(delta))
-		if err != nil {
+		err = db.AddDish(int(id), int(delta))
+		switch {
+		case err == nil:
+			return map[string]interface{}{
+				"ok": true,
+			}, nil
+		case errors.Is(err, db.ErrBadID):
 			return respondError(err)
+		default:
+			return nil, err
 		}
-
-		return map[string]interface{}{
-			"ok": true,
-		}, nil
 	},
 
 	// delete a dish record
@@ -238,17 +249,22 @@ var Methods = map[string]apiMethod{
 			return respondError(err)
 		}
 
-		err = delDish(int(id))
-		if err != nil {
+		err = db.DelDish(int(id))
+		switch {
+		case err == nil:
+			return map[string]interface{}{
+				"ok": true,
+			}, nil
+		case errors.Is(err, db.ErrBadID):
 			return respondError(err)
+		default:
+			return nil, err
 		}
-
-		return map[string]interface{}{
-			"ok": true,
-		}, nil
 	},
 }
 
+// Process authentication request form login form
+// Separated from other methods because it mustn't go through auth check middleware.
 func authMethod(r * http.Request)(map[string]interface{}, error){
 	err := r.ParseForm()
 	if err != nil {
@@ -258,9 +274,14 @@ func authMethod(r * http.Request)(map[string]interface{}, error){
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 
-	err = checkAdmin(username, password)
-	if err != nil {
+	err = db.CheckAdmin(username, password)
+	switch {
+	case err == nil:
+		break
+	case errors.Is(err, db.ErrBadAdmin):
 		return respondError(err)
+	default:
+		return nil, err
 	}
 
 	token := createAuthToken(username)

@@ -1,5 +1,5 @@
 package main
-
+/*
 import (
 	"fmt"
 	"github.com/xopoww/gologs"
@@ -7,11 +7,7 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
-type User struct {
-	FirstName	string
-	LastName	string
-	ID			int
-}
+
 
 type BotHandle interface {
 	SendText(id int, msg string) error
@@ -144,3 +140,4 @@ func (b *vkBot) getUserLocale(id int) *messageTemplates {
 func (b *vkBot) Logger()*gologs.Logger {
 	return &vkLogger
 }
+*/
