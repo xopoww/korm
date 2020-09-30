@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	. "github.com/xopoww/korm/types"
 )
 
 // Check if the user is in the DB by their in-app ID.
