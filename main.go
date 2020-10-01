@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"path/filepath"
 
 	//vk "github.com/xopoww/vk_min_api"
 	//tb "gopkg.in/tucnak/telebot.v2"
@@ -69,7 +70,7 @@ func main() {
 	// Init a database
 	db.Start(&db.Config{
 		Filename: "korm.db",
-		InitScript: "database_creation.sql",
+		InitScript: filepath.Join("database", "database_creation.sql"),
 		Logger: &logrus.Logger{
 			Out: os.Stdout,
 			Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
