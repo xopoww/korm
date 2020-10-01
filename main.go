@@ -67,11 +67,12 @@ func main() {
 	*/
 
 	// Init a database
-	go db.Start(&logrus.Logger{
+	db.Start(&logrus.Logger{
 		Out: os.Stdout,
 		Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
 		Level: logrus.DebugLevel,
 	})
+	go db.StartWorkers()
 
 	// admin app
 	admin.SetAdminRoutes(router.PathPrefix("/admin").Subrouter())

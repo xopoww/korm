@@ -24,10 +24,9 @@ type DB struct {
 // Global variable used internally throughout the package.
 var db *DB
 
-// 	Initialize a database handle and start workers.
+// 	Initialize a database handle.
 // Opens and pings a database and executes a starting script. If at any step an error is encountered,
 // Start will panic. A Close function must be called when working with database is finished.
-// Starts is a blocking operation as it starts all the workers needed for interaction with the database.
 func Start(logger *logrus.Logger) {
 	// open and ping a database
 	handle := sqlx.MustConnect("sqlite3", filepath.Join("..", dbName))
@@ -51,8 +50,9 @@ func Start(logger *logrus.Logger) {
 		db.Fatalf("Could not execute init script: %s", err)
 	}
 	db.Info("Initialized a database.")
+}
 
-	// start the workers
+func StartWorkers() {
 	orderWorker()
 }
 
