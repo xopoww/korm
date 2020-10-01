@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"github.com/xopoww/gologs"
+	vk "github.com/xopoww/vk_min_api"
+	tb "gopkg.in/tucnak/telebot.v2"
 	"path/filepath"
 
-	//vk "github.com/xopoww/vk_min_api"
-	//tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -20,10 +21,17 @@ import (
 	db "github.com/xopoww/korm/database"
 )
 
-var locales map[string]locale
+var locales map[string]*locale
 
 func main() {
 	rand.Seed(time.Now().Unix())
+
+	// loggers
+	logger := &logrus.Logger{
+		Out: os.Stdout,
+		Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
+		Level: logrus.DebugLevel,
+	}
 
 	// messages from JSON
 	var err error
@@ -34,7 +42,7 @@ func main() {
 
 	// main router
 	router := mux.NewRouter()
-	/*
+
 	// VK initialization
 	VK_TOKEN := os.Getenv("VK_TOKEN")
 	vbot, err := vk.NewBot(
@@ -43,7 +51,7 @@ func main() {
 			Version: "5.95",
 			Secret: "testing",
 		},
-		false, nil)
+		false, &gologs.Logger{})
 	if err != nil {
 		panic(err)
 	}
@@ -56,26 +64,22 @@ func main() {
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
 	})
 	if err != nil {
-		tgLogger.Fatalf("Error initializing telebot: %s", err)
+		logger.Fatalf("Error initializing telebot: %s", err)
 	} else {
-		tgLogger.Info("Initialized a TG bot.")
+		logger.Info("Initialized a TG bot.")
 	}
 
 	// abstract bot inits
 	AddHandlers(
-		&vkBot{vbot},
-		&tgBot{tbot})
-	*/
+		&vkBot{vbot, logger},
+		&tgBot{tbot, logger},
+		)
 
 	// Init a database
 	db.Start(&db.Config{
 		Filename: "korm.db",
 		InitScript: filepath.Join("database", "database_creation.sql"),
-		Logger: &logrus.Logger{
-			Out: os.Stdout,
-			Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
-			Level: logrus.DebugLevel,
-		},
+		Logger: logger,
 	})
 	go db.StartWorkers()
 
@@ -93,13 +97,11 @@ func main() {
 			http.ListenAndServe("", router))
 	}()
 
-	/*
 	go tbot.Start()
 	go func(){
 		vbot.Start()
 		waitGroup.Done()
 	}()
-	*/
 
 	waitGroup.Wait()
 }
@@ -147,11 +149,11 @@ type messageTemplates struct {
 
 type locale struct {
 	Repr			string		`json:"repr"`
-	Messages		messageTemplates	`json:"messages"`
+	Messages		*messageTemplates	`json:"messages"`
 }
 
 const messagesFile = "messages.json"
-func loadMessages()(map[string]locale, error) {
+func loadMessages()(map[string]*locale, error) {
 	file, err := os.Open(messagesFile)
 	if err != nil {
 		return nil, err
@@ -161,7 +163,7 @@ func loadMessages()(map[string]locale, error) {
 		return nil, err
 	}
 
-	var locales map[string]locale
+	var locales map[string]*locale
 	err = json.Unmarshal(data, &locales)
 	if err != nil {
 		return nil, err

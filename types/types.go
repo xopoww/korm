@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // User contains general information about a user.
 // User.ID is an internal uid.
@@ -17,6 +20,10 @@ type Dish struct {
 	Description		string
 	Quantity		int
 	Kind			*DishKind
+}
+
+func (d Dish) String() string {
+	return fmt.Sprintf("%s (%s)", d.Name, d.Kind.Repr)
 }
 
 // DishKind represents a kind of dish (e.g. soup, drink)
