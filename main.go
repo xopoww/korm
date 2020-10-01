@@ -67,10 +67,14 @@ func main() {
 	*/
 
 	// Init a database
-	db.Start(&logrus.Logger{
-		Out: os.Stdout,
-		Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
-		Level: logrus.DebugLevel,
+	db.Start(&db.Config{
+		Filename: "korm.db",
+		InitScript: "database_creation.sql",
+		Logger: &logrus.Logger{
+			Out: os.Stdout,
+			Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
+			Level: logrus.DebugLevel,
+		},
 	})
 	go db.StartWorkers()
 

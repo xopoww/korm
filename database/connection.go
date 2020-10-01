@@ -6,7 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 )
 
 const (
@@ -21,33 +20,48 @@ type DB struct {
 	*logrus.Logger
 }
 
+type Config struct {
+	Filename	string
+	// Filename/path to the text file with the SQL script that needs to be executed at the start.
+	// If InitScript is empty string, it is ignored.
+	InitScript	string
+	Logger		*logrus.Logger
+}
+
 // Global variable used internally throughout the package.
 var db *DB
 
 // 	Initialize a database handle.
 // Opens and pings a database and executes a starting script. If at any step an error is encountered,
 // Start will panic. A Close function must be called when working with database is finished.
-func Start(logger *logrus.Logger) {
+func Start(cfg *Config) {
 	// open and ping a database
-	handle := sqlx.MustConnect("sqlite3", filepath.Join("..", dbName))
+	handle := sqlx.MustConnect("sqlite3", cfg.Filename)
+	logger := cfg.Logger
+	if logger == nil {
+		logger = &logrus.Logger{}
+	}
+
 	db = &DB{
 		handle,
 		logger,
 	}
 	db.Info("Opened a database.")
 
-	// open, read and execute an initial script
-	file, err := os.Open("database_creation.sql")
-	if err != nil {
-		db.Fatalf("Could not open %s: %s", initScript, err)
-	}
-	script, err := ioutil.ReadAll(file)
-	if err != nil {
-		db.Fatalf("Could not read %s: %v", initScript, err)
-	}
-	_, err = db.Exec(string(script))
-	if err != nil {
-		db.Fatalf("Could not execute init script: %s", err)
+	if cfg.InitScript != "" {
+		// open, read and execute an initial script
+		file, err := os.Open(cfg.InitScript)
+		if err != nil {
+			db.Panicf("Could not open %s: %s", cfg.InitScript, err)
+		}
+		script, err := ioutil.ReadAll(file)
+		if err != nil {
+			db.Panicf("Could not read %s: %v", cfg.InitScript, err)
+		}
+		_, err = db.Exec(string(script))
+		if err != nil {
+			db.Panicf("Could not execute init script: %s", err)
+		}
 	}
 	db.Info("Initialized a database.")
 }
