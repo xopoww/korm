@@ -223,7 +223,6 @@ func NewTgBot(token string, logger *logrus.Logger) (*tgBot, error) {
 	if err != nil {
 		return nil, err
 	}
-	tbot.Debug = true
 	return &tgBot{
 		BotAPI:           tbot,
 		Logger:           logger,
@@ -355,15 +354,14 @@ func (b *tgBot) CallbackHandler(condition func(string)bool, action messageHandle
 func (b *tgBot) SendText(id int, msg string, keyboard *Keyboard) error {
 	message := tg.NewMessage(int64(id), msg)
 	if keyboard != nil {
-		tgRows := make([][]tg.InlineKeyboardButton, len(keyboard.rows))
-		for _, row := range keyboard.rows {
-			tgRow := make([]tg.InlineKeyboardButton,len(row))
-			for _, button := range row {
-				tgRow = append(tgRow, tg.NewInlineKeyboardButtonData(button.Caption, button.Data))
+		tgKeyboard := make([][]tg.InlineKeyboardButton, len(keyboard.rows))
+		for i, row := range keyboard.rows {
+			tgKeyboard[i] = make([]tg.InlineKeyboardButton, len(row))
+			for j, button := range row {
+				tgKeyboard[i][j] = tg.NewInlineKeyboardButtonData(button.Caption, button.Data)
 			}
-			tgRows = append(tgRows, tg.NewInlineKeyboardRow(tgRow...))
 		}
-		message.ReplyMarkup = tg.NewInlineKeyboardMarkup(tgRows...)
+		message.ReplyMarkup = tg.NewInlineKeyboardMarkup(tgKeyboard...)
 	}
 	_, err := b.Send(message)
 	return err
