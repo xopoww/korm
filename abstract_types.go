@@ -46,6 +46,7 @@ type BotHandle interface {
 	CommandHandler(command string, action messageHandler)
 
 	//  Add callback query handler
+	// For VK callback handlers only ID field of sender will be populated.
 	CallbackHandler(condition func(string)bool, action messageHandler)
 
 	// TODO: fix collision with tg.BotAPI.Debug
@@ -133,7 +134,22 @@ type vkBot struct {
 }
 
 func (b *vkBot) SendText(id int, msg string, keyboard *Keyboard) error {
-	return b.SendMessage(id, msg)
+	var vkKeyboard *vk.Keyboard
+	if keyboard != nil {
+		vkRows := make([][]vk.KeyboardButton, len(keyboard.rows))
+		for i, row := range keyboard.rows {
+			vkRows[i] = make([]vk.KeyboardButton, len(row))
+			for j, button := range row {
+				vkRows[i][j] = vk.NewCallbackButton(button.Caption, button.Data, button.Color)
+			}
+		}
+		vkKeyboard = &vk.Keyboard{
+			OneTime: false,
+			Buttons: vkRows,
+			Inline:  true,
+		}
+	}
+	return b.SendMessage(id, msg, vkKeyboard)
 }
 
 func (b *vkBot) DefaultHandler(action messageHandler) {
@@ -205,9 +221,11 @@ func (b *vkBot) CommandHandler(command string, action messageHandler) {
 }
 
 func (b *vkBot) CallbackHandler(condition func(string)bool, action messageHandler) {
-	// TODO: implement
+	b.HandleCallback(condition, func(m * vk.Message){
+		sender := &User{ID: m.FromID}
+		action(b, m.Payload, sender, false, locales[db.GetUserLocale(sender.ID, true)].Messages)
+	})
 }
-
 
 type tgBot struct {
 	*tg.BotAPI

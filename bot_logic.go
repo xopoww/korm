@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	vk "github.com/xopoww/vk_min_api"
 	"regexp"
 
 	db "github.com/xopoww/korm/database"
@@ -107,7 +108,8 @@ func AddHandlers(bots ...BotHandle) {
 }
 
 var TestKeyboard = Keyboard{[][]KeyboardButton{
-	{KeyboardButton{Caption: "foo", Data: "foo"}, KeyboardButton{Caption: "bar", Data: "bar"}},
+	{KeyboardButton{Caption: "foo", Data: "foo", Color: vk.ColorRed},
+		KeyboardButton{Caption: "bar", Data: "bar", Color: vk.ColorGreen}},
 	{KeyboardButton{Caption: "baz", Data: "b a z"}},
 }}
 
