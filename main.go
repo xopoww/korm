@@ -16,6 +16,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"flag"
 
 	"github.com/xopoww/korm/admin"
 	db "github.com/xopoww/korm/database"
@@ -26,11 +27,18 @@ var locales map[string]*locale
 func main() {
 	rand.Seed(time.Now().Unix())
 
+	trace := flag.Bool("trace", false, "set logger level to trace")
+	flag.Parse()
+	lvl := logrus.DebugLevel
+	if *trace {
+		lvl = logrus.TraceLevel
+	}
+
 	// loggers
 	logger := &logrus.Logger{
 		Out: os.Stdout,
 		Formatter: &logrus.TextFormatter{DisableLevelTruncation: true},
-		Level: logrus.DebugLevel,
+		Level: lvl,
 	}
 
 	// messages from JSON
