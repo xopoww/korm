@@ -27,7 +27,7 @@ func AddHandlers(bots ...BotHandle) {
 
 				err := bot.SendText(sender.ID, reply, nil)
 				if err != nil {
-					bot.Errorf("Error sending a message to user (id %d): %s", err)
+					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 				}
 			})
 
@@ -49,7 +49,7 @@ func AddHandlers(bots ...BotHandle) {
 
 				err = bot.SendText(sender.ID, reply, nil)
 				if err != nil {
-					bot.Errorf("Error sending a message to user (id %d): %s", err)
+					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 				}
 			})
 
@@ -58,13 +58,13 @@ func AddHandlers(bots ...BotHandle) {
 				if text == "arg" {
 					err := bot.SendText(sender.ID, "Got your arg!", nil)
 					if err != nil {
-						bot.Errorf("Error sending a message to user (id %d): %s", err)
+						bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 					}
 					return
 				}
 				err := bot.SendText(sender.ID, "Look at my nice keyboard!", &TestKeyboard)
 				if err != nil {
-					bot.Errorf("Error sending a message to user (id %d): %s", err)
+					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 				}
 			})
 
@@ -72,7 +72,7 @@ func AddHandlers(bots ...BotHandle) {
 			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
 				err := bot.SendText(sender.ID, fmt.Sprintf("You've clicked short button: %s", text), nil)
 				if err != nil {
-					bot.Errorf("Error sending a message to user (id %d): %s", err)
+					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 				}
 			})
 
@@ -80,7 +80,7 @@ func AddHandlers(bots ...BotHandle) {
 			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
 				err := bot.SendText(sender.ID, "B A Z", nil)
 				if err != nil {
-					bot.Errorf("Error sending a message to user (id %d): %s", err)
+					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 				}
 			})
 
@@ -100,7 +100,7 @@ func AddHandlers(bots ...BotHandle) {
 
 				err := bot.SendText(sender.ID, reply, nil)
 				if err != nil {
-					bot.Errorf("Error sending a message to user (id %d): %s", err)
+					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 				}
 			})
 	}
