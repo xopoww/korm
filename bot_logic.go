@@ -108,9 +108,11 @@ func AddHandlers(bots ...BotHandle) {
 }
 
 var TestKeyboard = Keyboard{[][]KeyboardButton{
-	{KeyboardButton{Caption: "foo", Data: "foo", Color: vk.ColorRed},
-		KeyboardButton{Caption: "bar", Data: "bar", Color: vk.ColorGreen}},
-	{KeyboardButton{Caption: "baz", Data: "bz"}},
+	{
+		KeyboardButton{Caption: "foo", Data: "foo", Color: vk.ColorRed},
+		KeyboardButton{Caption: "bar", Data: "bar", Color: vk.ColorGreen}
+	},
+	//{KeyboardButton{Caption: "baz", Data: "bz"}},
 }}
 
 // utils
