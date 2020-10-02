@@ -51,14 +51,11 @@ func main() {
 	router := mux.NewRouter()
 
 	// VK initialization
-	vbot, err := vk.NewBot(
-		vk.Properties{
+	vbot, err := vk.NewBot(vk.Properties{
 			Token: os.Getenv("VK_TOKEN"),
 			Version: "5.95",
 			Secret: "testing",
-		},
-		false,
-		&gologs.Logger{})
+		},false)
 	if err != nil {
 		panic(err)
 	}
