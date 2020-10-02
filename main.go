@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/xopoww/gologs"
 	vk "github.com/xopoww/vk_min_api"
 	"path/filepath"
 
