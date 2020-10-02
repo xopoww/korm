@@ -26,6 +26,7 @@ func main() {
 	rand.Seed(time.Now().Unix())
 
 	trace := flag.Bool("trace", false, "set logger level to trace")
+	vkVerbose := flag.Bool("vk_verb", false, "set vk bot VerboseLogging option")
 	flag.Parse()
 	lvl := logrus.DebugLevel
 	if *trace {
@@ -54,6 +55,7 @@ func main() {
 			Token: os.Getenv("VK_TOKEN"),
 			Version: "5.95",
 			Secret: "testing",
+			VerboseLogging: *vkVerbose,
 		},false)
 	if err != nil {
 		panic(err)
