@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "DishKinds" (
         price       INTEGER NOT NULL
 );
 
-INSERT OR REPLACE INTO DishKinds (repr, price) VALUES
+INSERT OR IGNORE INTO DishKinds (repr, price) VALUES
         ('корм', 185),
         ('напиток', 40),
         ('суп', 75);
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "Dishes" (
         quantity    INTEGER,
         kind        INTEGER NOT NULL,
 
-        FOREIGN KEY ("kind") REFERENCES DishKinds("id")
+        FOREIGN KEY ("kind") REFERENCES DishKinds("id") ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "Orders" (
