@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/xopoww/gologs"
+	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	vk "github.com/xopoww/vk_min_api"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"path/filepath"
@@ -67,12 +68,9 @@ func main() {
 
 	// TG initialization
 	TG_TOKEN := os.Getenv("TG_TOKEN")
-	tbot, err := tb.NewBot(tb.Settings{
-		Token:  TG_TOKEN,
-		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
-	})
+	tbot, err := NewTgBot(TG_TOKEN, logger)
 	if err != nil {
-		logger.Fatalf("Error initializing telebot: %s", err)
+		logger.Fatalf("Error initializing TG bot: %s", err)
 	} else {
 		logger.Info("Initialized a TG bot.")
 	}
@@ -80,7 +78,7 @@ func main() {
 	// abstract bot inits
 	AddHandlers(
 		&vkBot{vbot, logger},
-		&tgBot{tbot, logger},
+		tbot,
 		)
 
 	// Init a database

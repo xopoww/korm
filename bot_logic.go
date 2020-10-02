@@ -25,7 +25,7 @@ func AddHandlers(bots ...BotHandle) {
 					reply = fmt.Sprintf(messages.HelloAgain, sender.FirstName)
 				}
 
-				err := bot.SendText(sender.ID, reply)
+				err := bot.SendText(sender.ID, reply, nil)
 				if err != nil {
 					bot.Errorf("Error sending a message to user (id %d): %s", err)
 				}
@@ -47,7 +47,38 @@ func AddHandlers(bots ...BotHandle) {
 					}
 				}
 
-				err = bot.SendText(sender.ID, reply)
+				err = bot.SendText(sender.ID, reply, nil)
+				if err != nil {
+					bot.Errorf("Error sending a message to user (id %d): %s", err)
+				}
+			})
+
+		bot.CommandHandler("test",
+			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
+				if text == "arg" {
+					err := bot.SendText(sender.ID, "Got your arg!", nil)
+					if err != nil {
+						bot.Errorf("Error sending a message to user (id %d): %s", err)
+					}
+					return
+				}
+				err := bot.SendText(sender.ID, "Look at my nice keyboard!", &TestKeyboard)
+				if err != nil {
+					bot.Errorf("Error sending a message to user (id %d): %s", err)
+				}
+			})
+
+		bot.CallbackHandler(func(d string)bool{ return len(d) == 3 },
+			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
+				err := bot.SendText(sender.ID, fmt.Sprintf("You've clicked short button: %s", text), nil)
+				if err != nil {
+					bot.Errorf("Error sending a message to user (id %d): %s", err)
+				}
+			})
+
+		bot.CallbackHandler(func(d string)bool{ return d == "b a z" },
+			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
+				err := bot.SendText(sender.ID, "B A Z", nil)
 				if err != nil {
 					bot.Errorf("Error sending a message to user (id %d): %s", err)
 				}
@@ -67,13 +98,18 @@ func AddHandlers(bots ...BotHandle) {
 				}
 
 
-				err := bot.SendText(sender.ID, reply)
+				err := bot.SendText(sender.ID, reply, nil)
 				if err != nil {
 					bot.Errorf("Error sending a message to user (id %d): %s", err)
 				}
 			})
 	}
 }
+
+var TestKeyboard = Keyboard{[][]KeyboardButton{
+	{KeyboardButton{Caption: "foo", Data: "foo"}, KeyboardButton{Caption: "bar", Data: "bar"}},
+	{KeyboardButton{Caption: "baz", Data: "b a z"}},
+}}
 
 // utils
 var (
