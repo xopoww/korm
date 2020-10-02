@@ -6,18 +6,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/xopoww/gologs"
-	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	vk "github.com/xopoww/vk_min_api"
-	tb "gopkg.in/tucnak/telebot.v2"
 	"path/filepath"
 
+	"flag"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
 	"sync"
 	"time"
-	"flag"
 
 	"github.com/xopoww/korm/admin"
 	db "github.com/xopoww/korm/database"
@@ -53,22 +51,21 @@ func main() {
 	router := mux.NewRouter()
 
 	// VK initialization
-	VK_TOKEN := os.Getenv("VK_TOKEN")
 	vbot, err := vk.NewBot(
 		vk.Properties{
-			Token: VK_TOKEN,
+			Token: os.Getenv("VK_TOKEN"),
 			Version: "5.95",
 			Secret: "testing",
 		},
-		false, &gologs.Logger{})
+		false,
+		&gologs.Logger{})
 	if err != nil {
 		panic(err)
 	}
 	router.HandleFunc("/vk", vbot.HTTPHandler())
 
 	// TG initialization
-	TG_TOKEN := os.Getenv("TG_TOKEN")
-	tbot, err := NewTgBot(TG_TOKEN, logger)
+	tbot, err := NewTgBot(os.Getenv("TG_TOKEN"), logger)
 	if err != nil {
 		logger.Fatalf("Error initializing TG bot: %s", err)
 	} else {

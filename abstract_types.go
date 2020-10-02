@@ -48,7 +48,8 @@ type BotHandle interface {
 	//  Add callback query handler
 	CallbackHandler(condition func(string)bool, action messageHandler)
 
-	Debug(...interface{})
+	// TODO: fix collision with tg.BotAPI.Debug
+	//Debug(...interface{})
 	Info(...interface{})
 	Warn(...interface{})
 	Error(...interface{})
