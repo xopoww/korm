@@ -90,7 +90,7 @@ func GetVkUser(uid int)(*User, error) {
 	var user User
 	err := db.QueryRowx(
 		`SELECT VkUsers.id, FirstName, LastName FROM VkUsers JOIN Users WHERE Users.id = $1`,
-		uid).StructScan(&user)
+		uid).Scan(&user.ID, &user.FirstName, &user.LastName)
 	switch {
 	case err == nil:
 		return &user, nil
