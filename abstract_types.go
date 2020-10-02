@@ -223,6 +223,7 @@ func NewTgBot(token string, logger *logrus.Logger) (*tgBot, error) {
 	if err != nil {
 		return nil, err
 	}
+	tbot.Debug = true
 	return &tgBot{
 		BotAPI:           tbot,
 		Logger:           logger,
@@ -360,7 +361,7 @@ func (b *tgBot) SendText(id int, msg string, keyboard *Keyboard) error {
 			for _, button := range row {
 				tgRow = append(tgRow, tg.NewInlineKeyboardButtonData(button.Caption, button.Data))
 			}
-			tgRows = append(tgRows, tgRow)
+			tgRows = append(tgRows, tg.NewInlineKeyboardRow(tgRow...))
 		}
 		message.ReplyMarkup = tg.NewInlineKeyboardMarkup(tgRows...)
 	}
