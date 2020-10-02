@@ -77,7 +77,7 @@ func AddHandlers(bots ...BotHandle) {
 				}
 			})
 
-		bot.CallbackHandler(func(d string)bool{ return d == "b a z" },
+		bot.CallbackHandler(func(d string)bool{ return d == "baaz" },
 			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
 				err := bot.SendText(sender.ID, "B A Z", nil)
 				if err != nil {
@@ -110,7 +110,7 @@ func AddHandlers(bots ...BotHandle) {
 var TestKeyboard = Keyboard{[][]KeyboardButton{
 	{KeyboardButton{Caption: "foo", Data: "foo", Color: vk.ColorRed},
 		KeyboardButton{Caption: "bar", Data: "bar", Color: vk.ColorGreen}},
-	{KeyboardButton{Caption: "baz", Data: "b a z"}},
+	{KeyboardButton{Caption: "baz", Data: "baaz"}},
 }}
 
 // utils
