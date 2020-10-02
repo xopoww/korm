@@ -132,7 +132,7 @@ func (b *vkBot) DefaultHandler(action messageHandler) {
 			}
 			sender.FirstName = vkUser.FirstName
 			sender.LastName = vkUser.LastName
-			_, err = db.AddUser(sender, false)
+			_, err = db.AddUser(sender, true)
 			if err != nil {
 				b.Errorf("Cannot add new user (id %d): %s", sender.ID, err)
 			}
@@ -166,7 +166,7 @@ func (b *vkBot) CommandHandler(command string, action messageHandler) {
 			}
 			sender.FirstName = vkUser.FirstName
 			sender.LastName = vkUser.LastName
-			_, err = db.AddUser(sender, false)
+			_, err = db.AddUser(sender, true)
 			if err != nil {
 				b.Errorf("Cannot add new user (id %d): %s", sender.ID, err)
 			}

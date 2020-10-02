@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
-	
+
 	db "github.com/xopoww/korm/database"
 	. "github.com/xopoww/korm/types"
 )
@@ -43,7 +43,7 @@ func AddHandlers(bots ...BotHandle) {
 				} else {
 					reply = "Наши блюда:"
 					for index, dish := range dishes {
-						reply += fmt.Sprintf("%d. %s\n", index+1, dish)
+						reply += fmt.Sprintf("\n%d. %s", index+1, dish)
 					}
 				}
 
@@ -80,10 +80,10 @@ var (
 	reCommand = regexp.MustCompile("/[^ ]+")
 	reArgument = regexp.MustCompile(" .+")
 )
+
 // 	Parse the text of the message to extract command and argument.
 // The supposed format is "/{command} {argument}".
 // Returns empty string (strings) if something wasn't found.
-
 func parseCommand(text string)(command, argument string) {
 	textBytes := []byte(text)
 	commandBytes := reCommand.Find(textBytes)

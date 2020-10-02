@@ -32,17 +32,18 @@ func GetDishes()([]Dish, error) {
 	}
 	allDishes := make([]Dish, 0)
 	for _, kind := range kinds {
-		dishes, err := GetDishesByKind(&kind)
+		dishes, err := GetDishesByKind(kind)
 		if err != nil {
 			return nil, fmt.Errorf("get dishes by kind: %w", err)
 		}
 		allDishes = append(allDishes, dishes...)
 	}
+	db.Tracef("Got total of %d dishes.", len(allDishes))
 	return allDishes, nil
 }
 
 // 	Get list of all dishes with the specific kind
-func GetDishesByKind(kind * DishKind)([]Dish, error) {
+func GetDishesByKind(kind DishKind)([]Dish, error) {
 	r, err := db.Queryx(
 		`
 SELECT id, name, description, quantity FROM Dishes WHERE kind = $1`,
@@ -58,13 +59,15 @@ SELECT id, name, description, quantity FROM Dishes WHERE kind = $1`,
 
 	result := make([]Dish, 0)
 	for r.Next() {
-		dish := Dish{Kind: kind}
+		dish := Dish{Kind: &kind}
 		err = r.Scan(&dish.ID, &dish.Name, &dish.Description, &dish.Quantity)
 		if err != nil {
 			return nil, fmt.Errorf("scan: %w", err)
 		}
 		result = append(result, dish)
 	}
+
+	db.Tracef("Got %d dishes for kind %s.", len(result), kind.Repr)
 
 	return result, nil
 }

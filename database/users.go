@@ -73,7 +73,7 @@ func AddUser(user * User, vk bool)(int, error) {
 		if e := tx.Commit(); e != nil {
 			db.Fatalf("Could not commit transaction: %s", err)
 		}
-		db.Debugf("Added a %s user to the database.", idName[:3])
+		db.Debugf("Added a %s user to the database.", idName[:2])
 	}()
 
 	uid, err := res.LastInsertId()
