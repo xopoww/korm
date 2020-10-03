@@ -69,21 +69,16 @@ func AddHandlers(bots ...BotHandle) {
 				}
 			})
 
-		bot.CallbackHandler(func(d string)bool{ return len(d) == 3 },
-			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
-				err := bot.SendText(sender.ID, fmt.Sprintf("You've clicked short button: %s", text), nil)
-				if err != nil {
-					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
-				}
-			})
+		bot.CallbackHandler(func(d string)bool{ return len(d) == 3 }, nil, "Short button!")
 
 		bot.CallbackHandler(func(d string)bool{ return d == "bz" },
 			func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates) {
-				err := bot.SendText(sender.ID, "B A Z", nil)
+				err := bot.SendText(sender.ID, "You've pressed the long button!", nil)
 				if err != nil {
 					bot.Errorf("Error sending a message to user (id %d): %s", sender.ID, err)
 				}
-			})
+			},
+			"b a z")
 
 		// on text/unknown command
 		bot.DefaultHandler(
@@ -112,7 +107,7 @@ var TestKeyboard = Keyboard{[][]KeyboardButton{
 		KeyboardButton{Caption: "foo", Data: "foo", Color: vk.ColorRed},
 		KeyboardButton{Caption: "bar", Data: "bar", Color: vk.ColorGreen},
 	},
-	{KeyboardButton{Caption: "baz", Data: "baaz"}},
+	{KeyboardButton{Caption: "baz", Data: "bz"}},
 }}
 
 // utils

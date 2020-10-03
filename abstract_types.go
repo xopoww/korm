@@ -47,7 +47,7 @@ type BotHandle interface {
 
 	//  Add callback query handler
 	// For VK callback handlers only ID field of sender will be populated.
-	CallbackHandler(condition func(string)bool, action messageHandler)
+	CallbackHandler(condition func(string)bool, action messageHandler, answer string)
 
 	// TODO: fix collision with tg.BotAPI.Debug
 	//Debug(...interface{})
@@ -59,74 +59,6 @@ type BotHandle interface {
 	Warnf(string, ...interface{})
 	Errorf(string, ...interface{})
 }
-/*
-type tgBot struct {
-	*tb.Bot
-	*logrus.Logger
-}
-
-type tgRecipient int
-func (tr tgRecipient) Recipient() string {
-	return fmt.Sprint(tr)
-}
-func (b * tgBot) SendText(id int, msg string, keyboard *Keyboard)error {
-
-	_, err := b.Send(tgRecipient(id), msg)
-	return err
-}
-
-func (b *tgBot) DefaultHandler(action messageHandler) {
-	b.Handle(tb.OnText, func(m * tb.Message){
-		sender := &User{
-			FirstName: m.Sender.FirstName,
-			LastName: m.Sender.LastName,
-			ID: m.Sender.ID,
-		}
-		uid, err := db.CheckUser(sender.ID, false)
-		newUser := true
-		switch {
-		case err != nil:
-			b.Errorf("Cannot check user (id %d): %s", sender.ID, err)
-		case uid == 0:
-			// new user
-			_, err = db.AddUser(sender, false)
-			if err != nil {
-				b.Errorf("Cannot add new user (id %d): %s", sender.ID, err)
-			}
-		default:
-			// old user
-			newUser = false
-		}
-		action(b, m.Text, sender, newUser, locales[db.GetUserLocale(sender.ID, false)].Messages)
-	})
-}
-
-func (b *tgBot) CommandHandler(command string, action messageHandler) {
-	b.Handle("/"+command, func(m * tb.Message){
-		sender := &User{
-			FirstName: m.Sender.FirstName,
-			LastName: m.Sender.LastName,
-			ID: m.Sender.ID,
-		}
-		uid, err := db.CheckUser(sender.ID, false)
-		newUser := true
-		switch {
-		case err != nil:
-			b.Errorf("Cannot check user (id %d): %s", sender.ID, err)
-		case uid == 0:
-			// new user
-			_, err = db.AddUser(sender, false)
-			if err != nil {
-				b.Errorf("Cannot add new user (id %d): %s", sender.ID, err)
-			}
-		default:
-			// old user
-			newUser = false
-		}
-		action(b, m.Payload, sender, newUser, locales[db.GetUserLocale(sender.ID, false)].Messages)
-	})
-}
-*/
 
 type vkBot struct {
 	*vk.Bot
@@ -220,17 +152,25 @@ func (b *vkBot) CommandHandler(command string, action messageHandler) {
 	})
 }
 
-func (b *vkBot) CallbackHandler(condition func(string)bool, action messageHandler) {
+func (b *vkBot) CallbackHandler(condition func(string)bool, action messageHandler, answer string) {
 	b.HandleCallback(func(m map[string]interface{})bool{
 		data, found := m["data"]
 		if !found { return false }
 		str, ok := data.(string)
 		if !ok { return false }
 		return condition(str)
-	}, func(m * vk.Message){
-		sender := &User{ID: m.FromID}
-		action(b, m.Payload["data"].(string), sender,
-			false, locales[db.GetUserLocale(sender.ID, true)].Messages)
+	}, func(m * vk.MessageEvent){
+		err := b.SendMessageEventAnswer(m, answer)
+		if err != nil {
+			b.Errorf("Could not send answer to messageEvent: %s", err)
+			return
+		}
+		if action != nil {
+			sender := &User{ID: m.UserID}
+			action(b, m.Payload["data"].(string), sender,
+				false, locales[db.GetUserLocale(sender.ID, true)].Messages)
+		}
+
 	})
 }
 
@@ -276,12 +216,6 @@ func (b * tgBot) Start() {
 	for u := range updates {
 		// CallbackQuery
 		if cq := u.CallbackQuery; cq != nil {
-			// answer it with nothing
-			_, err = b.AnswerCallbackQuery(tg.NewCallback(cq.ID, ""))
-			if err != nil {
-				b.Errorf("Could not answer callback query: %s.", err)
-				continue
-			}
 			// handle it
 			b.handleCallback(cq)
 		}
@@ -361,17 +295,24 @@ func (b *tgBot) CommandHandler(command string, action messageHandler) {
 	}
 }
 
-func (b *tgBot) CallbackHandler(condition func(string)bool, action messageHandler) {
+func (b *tgBot) CallbackHandler(condition func(string)bool, action messageHandler, answer string) {
 	b.callbackHandlers = append(b.callbackHandlers,
 		tgCallbackHandler{
 			condition: condition,
 			action: func(q * tg.CallbackQuery) {
-				sender := &User{
-					FirstName: q.From.FirstName,
-					LastName: q.From.LastName,
-					ID: q.From.ID,
+				_, err := b.AnswerCallbackQuery(tg.NewCallback(q.ID, answer))
+				if err != nil {
+					b.Errorf("Could not answer callback query: %s.", err)
+					return
 				}
-				action(b, q.Data, sender, false, locales[db.GetUserLocale(sender.ID, false)].Messages)
+				if action != nil {
+					sender := &User{
+						FirstName: q.From.FirstName,
+						LastName: q.From.LastName,
+						ID: q.From.ID,
+					}
+					action(b, q.Data, sender, false, locales[db.GetUserLocale(sender.ID, false)].Messages)
+				}
 			},
 		})
 }
