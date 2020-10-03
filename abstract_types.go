@@ -221,9 +221,16 @@ func (b *vkBot) CommandHandler(command string, action messageHandler) {
 }
 
 func (b *vkBot) CallbackHandler(condition func(string)bool, action messageHandler) {
-	b.HandleCallback(condition, func(m * vk.Message){
+	b.HandleCallback(func(m map[string]interface{})bool{
+		data, found := m["data"]
+		if !found { return false }
+		str, ok := data.(string)
+		if !ok { return false }
+		return condition(str)
+	}, func(m * vk.Message){
 		sender := &User{ID: m.FromID}
-		action(b, m.Payload, sender, false, locales[db.GetUserLocale(sender.ID, true)].Messages)
+		action(b, m.Payload["data"].(string), sender,
+			false, locales[db.GetUserLocale(sender.ID, true)].Messages)
 	})
 }
 
