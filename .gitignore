@@ -2,3 +2,6 @@
 
 # Go stuff
 .idea/
+
+# Unused code
+drafts/

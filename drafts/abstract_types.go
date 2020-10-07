@@ -1,4 +1,4 @@
-package main
+package drafts
 
 import (
 	"github.com/sirupsen/logrus"
@@ -8,6 +8,8 @@ import (
 
 	db "github.com/xopoww/korm/database"
 	. "github.com/xopoww/korm/types"
+
+	"sync/atomic"
 )
 
 type KeyboardButton struct {
@@ -16,19 +18,31 @@ type KeyboardButton struct {
 	Color		string
 }
 
-type Keyboard struct {
-	rows		[][]KeyboardButton
-}
-
-func (k * Keyboard) AddRow(buttons ...KeyboardButton) {
-	k.rows = append(k.rows, buttons)
-}
+//type Keyboard struct {
+//	inline		bool
+//	rows		[][]KeyboardButton
+//}
+//
+//func (k * Keyboard) AddRow(buttons ...KeyboardButton) {
+//	k.rows = append(k.rows, buttons)
+//}
 
 // Message handler is a function for handling text messages by bot.
 // It must be passed as an argument to either DefaultHandler or CommandHandler methods of BotHandle.
 // If it is a default handler, text will be a text of the message. If it is a CommandHandler, text will
 // be a payload of the specified command.
-type messageHandler func(bot BotHandle, text string, sender *User, newUser bool, messages *messageTemplates)
+type messageHandler func(text string, ctx handlerContext)
+type commandHandler func(arg interface{}, ctx handlerContext)
+
+
+type handlerContext struct {
+	bot			BotHandle
+	user		*User
+	newUser		bool
+	messages	*messageTemplates
+}
+
+
 
 type BotHandle interface {
 	// 	Send a text message
@@ -43,11 +57,11 @@ type BotHandle interface {
 
 	// 	Add on-command handler to the bot
 	// Performs the same actions before passing the message to the messageHandler as DefaultHandler
-	CommandHandler(command string, action messageHandler)
+	CommandHandler(command string, action commandHandler)
 
-	//  Add callback query handler
-	// For VK callback handlers only ID field of sender will be populated.
-	CallbackHandler(condition func(string)bool, action messageHandler, answer string)
+	// Register the list of commands. All the handlers are set automatically.
+	RegisterCommands(commands ...Command)
+}
 
 	// TODO: fix collision with tg.BotAPI.Debug
 	//Debug(...interface{})
@@ -63,7 +77,15 @@ type BotHandle interface {
 type vkBot struct {
 	*vk.Bot
 	*logrus.Logger
+
+	buttonCounter	uint32
 }
+
+func (b *vkBot) newButtonID() uint32 {
+	return atomic.AddUint32(&b.buttonCounter, 1)
+}
+
+
 
 func (b *vkBot) SendText(id int, msg string, keyboard *Keyboard) error {
 	var vkKeyboard *vk.Keyboard
@@ -114,21 +136,31 @@ func (b *vkBot) DefaultHandler(action messageHandler) {
 				sender = &User{ID: m.FromID}
 			}
 		}
-		action(b, m.Text, sender, newUser, locales[db.GetUserLocale(sender.ID, true)].Messages)
+		action(m.Text, handlerContext{
+			bot:      b,
+			user:     sender,
+			newUser:  newUser,
+			messages: locales[db.GetUserLocale(sender.ID, true)].Messages,
+		})
 	})
 }
 
-func (b *vkBot) CommandHandler(command string, action messageHandler) {
-	b.HandleOnCommand(command, func(m * vk.Message){
-		uid, err := db.CheckUser(m.FromID, true)
+func (b *vkBot) CommandHandler(command string, action commandHandler) {
+	b.HandleOnCommand(command, func(m * vk.MessageEvent){
+		err := b.SendMessageEventAnswer(m, "")
+		if err != nil {
+			b.Errorf("Could not send answer to messageEvent: %s", err)
+			return
+		}
+		uid, err := db.CheckUser(m.UserID, true)
 		newUser := true
-		sender := &User{ID: m.FromID}
+		sender := &User{ID: m.UserID}
 		switch {
 		case err != nil:
 			b.Errorf("Cannot check user (id %d): %s", sender.ID, err)
 		case uid == 0:
 			// new user
-			vkUser, err := b.GetUserByID(m.FromID)
+			vkUser, err := b.GetUserByID(m.UserID)
 			if err != nil {
 				b.Errorf("Cannot get user (id %d) via API: %s", sender.ID, err)
 				break
@@ -144,11 +176,17 @@ func (b *vkBot) CommandHandler(command string, action messageHandler) {
 			newUser = false
 			sender, err = db.GetVkUser(uid)
 			if err != nil {
-				b.Errorf("Cannot get user (id %d) from DB: %s", m.FromID, err)
-				sender = &User{ID: m.FromID}
+				b.Errorf("Cannot get user (id %d) from DB: %s", m.UserID, err)
+				sender = &User{ID: m.UserID}
 			}
 		}
-		action(b, m.CommandArg(), sender, newUser, locales[db.GetUserLocale(sender.ID, true)].Messages)
+
+		action(m.Payload["arg"], handlerContext{
+			bot:      b,
+			user:     sender,
+			newUser:  newUser,
+			messages: locales[db.GetUserLocale(sender.ID, true)].Messages,
+		})
 	})
 }
 
@@ -167,8 +205,13 @@ func (b *vkBot) CallbackHandler(condition func(string)bool, action messageHandle
 		}
 		if action != nil {
 			sender := &User{ID: m.UserID}
-			action(b, m.Payload["data"].(string), sender,
-				false, locales[db.GetUserLocale(sender.ID, true)].Messages)
+
+			action(m.Payload["data"].(string), handlerContext{
+				bot:      b,
+				user:     sender,
+				newUser:  false,
+				messages: locales[db.GetUserLocale(sender.ID, true)].Messages,
+			})
 		}
 
 	})
@@ -181,6 +224,12 @@ type tgBot struct {
 	callbackHandlers []tgCallbackHandler
 	commandHandlers map[string]func(*tg.Message)
 	textHandler func(*tg.Message)
+
+	buttonCounter uint32
+}
+
+func (b *tgBot) newButtonID() uint32 {
+	return atomic.AddUint32(&b.buttonCounter, 1)
 }
 
 func NewTgBot(token string, logger *logrus.Logger) (*tgBot, error) {
@@ -197,6 +246,9 @@ func NewTgBot(token string, logger *logrus.Logger) (*tgBot, error) {
 	}, nil
 }
 
+type tgCustomHandler struct {
+
+}
 type tgCallbackHandler struct {
 	condition func(string)bool
 	action func(*tg.CallbackQuery)
