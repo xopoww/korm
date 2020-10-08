@@ -66,13 +66,13 @@ func onBar(bot BotHandle, user * User) {
 }
 
 var (
-	fooCommand = &Command{
+	fooCommand = Command{
 		Name: "a foo command",
 		Label:  "foo",
 		Action: onFoo,
 	}
 
-	barCommand = &Command{
+	barCommand = Command{
 		Name:   "a bar command",
 		Label:  "bar",
 		Action: onBar,
