@@ -32,25 +32,41 @@ func updateOnCallback(bot BotHandle, c * CallbackQuery) {
 	}
 }
 
+func setOnCallback(bot BotHandle, c * CallbackQuery) {
+	err := bot.EditMessage(c.From, c.MessageID, c.Argument, BarKeys)
+	if err != nil {
+		logger.Errorf("Error editing a message: %s", err)
+	}
+}
+
 var BarKeys = &Keyboard{
 	keys: [][]KeyboardButton{
 		{
 			KeyboardButton{
 				Label:  "Click",
-				Answer: "Clack!",
-				Action: nil,
+				Action: "click",
 			},
 			KeyboardButton{
 				Label: "Delete",
-				Answer: "Deleted!",
-				Action: deleteOnCallback,
+				Action: "delete",
 			},
 		},
 		{
 			KeyboardButton{
 				Label: "Update",
-				Answer: "Updated!",
-				Action: updateOnCallback,
+				Action: "update",
+			},
+		},
+		{
+			KeyboardButton{
+				Label: "Set to \"Foo\"",
+				Action: "set",
+				Argument: "Foo",
+			},
+			KeyboardButton{
+				Label: "Set to \"Bar\"",
+				Action: "set",
+				Argument: "Bar",
 			},
 		},
 	},
@@ -67,13 +83,13 @@ func onBar(bot BotHandle, user * User) {
 
 var (
 	fooCommand = Command{
-		Name: "a foo command",
+		Name: "just a message",
 		Label:  "foo",
 		Action: onFoo,
 	}
 
 	barCommand = Command{
-		Name:   "a bar command",
+		Name:   "multifunctional keyboard",
 		Label:  "bar",
 		Action: onBar,
 	}
@@ -95,6 +111,11 @@ func StartTestBots() error {
 	if err != nil {
 		return fmt.Errorf("register commands: %w", err)
 	}
+
+	tbot.AddCallbackHandler("update", "Updated!", updateOnCallback)
+	tbot.AddCallbackHandler("delete", "Deleted!", deleteOnCallback)
+	tbot.AddCallbackHandler("click", "Clack!", nil)
+	tbot.AddCallbackHandler("set", "Set!", setOnCallback)
 
 	return tbot.Start()
 }

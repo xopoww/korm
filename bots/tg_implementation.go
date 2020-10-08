@@ -6,10 +6,8 @@ import (
 	"fmt"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
-	"net/url"
-	"sync/atomic"
-
 	. "github.com/xopoww/korm/types"
+	"net/url"
 )
 
 // Telegram implementation of BotHandle interface
@@ -21,8 +19,6 @@ type tgBot struct {
 	defaultHandler		func(*tg.Message)
 
 	logger				*logrus.Logger
-
-	buttonCounter		uint32
 }
 
 // Create a new TgBot
@@ -37,22 +33,16 @@ func NewTgBot(token string, logger *logrus.Logger) (BotHandle, error) {
 		commandHandlers:	make(map[string]func(*tg.Message)),
 		callbackHandlers:	make(map[string]callbackHandler),
 		logger:				logger,
-		buttonCounter:		0,
 	}, nil
 }
 
 type callbackHandler struct {
 	// answer that will be sent after the query is received
 	answer		string
-	action		func(*tg.CallbackQuery)
+	action		func(BotHandle, *CallbackQuery)
 }
 
-// create a unique id for keyboard button
-func (bot * tgBot) createButtonID() string {
-	return fmt.Sprint(atomic.AddUint32(&bot.buttonCounter, 1))
-}
-
-// Convert Keyboard to telegram reply markup and register all needed handlers.
+// Convert Keyboard to telegram reply markup.
 func (bot * tgBot) processKeyboard(keyboard * Keyboard) *tg.InlineKeyboardMarkup {
 	if keyboard == nil {
 		return nil
@@ -61,24 +51,13 @@ func (bot * tgBot) processKeyboard(keyboard * Keyboard) *tg.InlineKeyboardMarkup
 	for i, row := range keyboard.keys {
 		keys[i] = make([]tg.InlineKeyboardButton, len(row))
 		for j, button := range row {
-			// get a unique id for a button
-			id := bot.createButtonID()
-			// add the button with id as callback data to the keyboard
-			keys[i][j] = tg.NewInlineKeyboardButtonData(button.Label, id)
-			// register a handler
-			bot.callbackHandlers[id] = callbackHandler{
-				answer: button.Answer,
-				action: func(cq * tg.CallbackQuery) {
-					if action := button.Action; action != nil {
-						action(bot, &CallbackQuery{
-							From:      stripTgUser(cq.From),
-							MessageID: cq.Message.MessageID,
-						})
-					}
-
-				},
+			data := map[string]string{
+				"act": button.Action,
+				"arg": button.Argument,
 			}
-			bot.logger.Tracef("Processed button (%s) and assigned it id %s", button.Label, id)
+			// Ignoring an error because there simply can't be any.
+			dataBytes, _ := json.Marshal(data)
+			keys[i][j] = tg.NewInlineKeyboardButtonData(button.Label, string(dataBytes))
 		}
 	}
 	markup := tg.NewInlineKeyboardMarkup(keys...)
@@ -122,13 +101,29 @@ func (bot * tgBot) Start() error {
 
 		// callback query
 		if cq := upd.CallbackQuery; cq != nil {
-			if hand, found := bot.callbackHandlers[cq.Data]; found {
+			dataBytes := []byte(cq.Data)
+			var data struct {
+				Action		string	`json:"act"`
+				Argument	string	`json:"arg"`
+			}
+			err := json.Unmarshal(dataBytes, &data)
+			if err != nil {
+				bot.logger.Warnf("Invalid callback data: %s (error: %s)", cq.Data, err)
+				continue
+			}
+			if hand, found := bot.callbackHandlers[data.Action]; found {
 				_, err := bot.AnswerCallbackQuery(tg.NewCallback(cq.ID, hand.answer))
 				if err != nil {
 					bot.logger.Errorf("Error answering callback query: %s", err)
 					continue
 				}
-				hand.action(cq)
+				if act := hand.action; act != nil {
+					act(bot, &CallbackQuery{
+						From:      stripTgUser(cq.From),
+						MessageID: cq.Message.MessageID,
+						Argument:  data.Argument,
+					})
+				}
 				continue
 			}
 			// ! unhandled callback
@@ -146,6 +141,24 @@ func (bot *tgBot) SendMessage(text string, to *User, keyboard *Keyboard) (int, e
 		return 0, err
 	}
 	return resp.MessageID, nil
+}
+
+func (bot * tgBot) EditMessage(to *User, id int, text string, keyboard *Keyboard) error {
+	var cfg tg.Chattable
+	if text == "" {
+		cfg = tg.NewDeleteMessage(int64(to.ID), id)
+	} else {
+		cfg = tg.EditMessageTextConfig{
+			BaseEdit:              tg.BaseEdit{
+				ChatID:          int64(to.ID),
+				MessageID:       id,
+				ReplyMarkup:     bot.processKeyboard(keyboard),
+			},
+			Text:                  text,
+		}
+	}
+	_, err := bot.Send(cfg)
+	return err
 }
 
 func (bot *tgBot) RegisterCommands(commands ...Command) error {
@@ -172,22 +185,11 @@ func (bot *tgBot) RegisterCommands(commands ...Command) error {
 	return nil
 }
 
-func (bot * tgBot) EditMessage(to *User, id int, text string, keyboard *Keyboard) error {
-	var cfg tg.Chattable
-	if text == "" {
-		cfg = tg.NewDeleteMessage(int64(to.ID), id)
-	} else {
-		cfg = tg.EditMessageTextConfig{
-			BaseEdit:              tg.BaseEdit{
-				ChatID:          int64(to.ID),
-				MessageID:       id,
-				ReplyMarkup:     bot.processKeyboard(keyboard),
-			},
-			Text:                  text,
-		}
+func (bot *tgBot) AddCallbackHandler(action, answer string, handler func(BotHandle, *CallbackQuery)) {
+	bot.callbackHandlers[action] = callbackHandler{
+		answer: answer,
+		action: handler,
 	}
-	_, err := bot.Send(cfg)
-	return err
 }
 
 // ======== utils ========

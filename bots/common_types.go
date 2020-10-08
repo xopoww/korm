@@ -22,12 +22,19 @@ type BotHandle interface{
 
 	// Register a set of static commands to be available for users.
 	RegisterCommands(commands ...Command) error
+
+	// Add a handler for CallbackQuery with specified action label. Answer will be sent
+	// to a callback query.
+	AddCallbackHandler(action, answer string, handler func(BotHandle, *CallbackQuery))
 }
 
 // An object that is sent to the KeyboardButton Action when the button is pressed.
+// If an optional argument was provided bu callback query issuer (e.g. a button),
+// it will be in Argument field
 type CallbackQuery struct{
 	From		*User
 	MessageID	int
+	Argument	string
 }
 
 // Inline keyboard with all buttons being callback ones.
@@ -36,15 +43,18 @@ type Keyboard struct {
 }
 
 // Single button for Keyboard.
-// When the button is pressed, a CallbackQuery is formed and sent to Action
-// (all handlers are set when the message with the corresponding keyboard is sent).
+// When the button is pressed, a CallbackQuery is formed and sent to the callback handler
+// assigned to Action label.
 type KeyboardButton struct {
+	// Text of the button
 	Label		string
 	// VK only
 	Color		string
-	// Answer will be sent to user after they press the button
-	Answer		string
-	Action		func(BotHandle, *CallbackQuery)
+	// Unique action label that will be put into callback data.
+	// The shorter - the better.
+	Action		string
+	// Optional argument that can be also put into callback data.
+	Argument	string
 }
 
 // Command represents a static (i.e. without variable arguments) bot command.
