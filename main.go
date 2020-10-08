@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 
 	"flag"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -16,10 +14,11 @@ import (
 	"time"
 
 	"github.com/xopoww/korm/admin"
+	"github.com/xopoww/korm/bots"
 	db "github.com/xopoww/korm/database"
 )
 
-var locales map[string]*locale
+//var locales map[string]*locale
 
 func main() {
 	rand.Seed(time.Now().Unix())
@@ -61,19 +60,16 @@ func main() {
 	//}
 	//router.HandleFunc("/vk", vbot.HTTPHandler())
 	//
-	//// TG initialization
-	//tbot, err := NewTgBot(os.Getenv("TG_TOKEN"), logger)
-	//if err != nil {
-	//	logger.Fatalf("Error initializing TG bot: %s", err)
-	//} else {
-	//	logger.Info("Initialized a TG bot.")
-	//}
-	//
-	//// abstract bot inits
-	//AddHandlers(
-	//	&vkBot{vbot, logger},
-	//	tbot,
-	//	)
+
+	// Bot initialization
+	tbot, err := bots.NewTgBot(os.Getenv("TG_TOKEN"), logger)
+	if err != nil {
+		panic(err)
+	}
+	err = InitializeBots(tbot)
+	if err != nil {
+		panic(err)
+	}
 
 	// Init a database
 	db.Start(&db.Config{
@@ -97,11 +93,10 @@ func main() {
 			http.ListenAndServe("", router))
 	}()
 
-	//go tbot.Start()
-	//go func(){
-	//	vbot.Start()
-	//	waitGroup.Done()
-	//}()
+	go func(){
+		err := tbot.Start()
+		logger.Fatalf("TG bot failed: %s", err)
+	}()
 
 	waitGroup.Wait()
 }

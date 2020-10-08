@@ -26,6 +26,10 @@ type BotHandle interface{
 	// Add a handler for CallbackQuery with specified action label. Answer will be sent
 	// to a callback query.
 	AddCallbackHandler(action, answer string, handler func(BotHandle, *CallbackQuery))
+
+	// logging methods
+	Debugf(string, ...interface{})
+	Errorf(string, ...interface{})
 }
 
 // An object that is sent to the KeyboardButton Action when the button is pressed.
@@ -40,6 +44,10 @@ type CallbackQuery struct{
 // Inline keyboard with all buttons being callback ones.
 type Keyboard struct {
 	keys [][]KeyboardButton
+}
+
+func (k * Keyboard) AddRow(row ...KeyboardButton) {
+	k.keys = append(k.keys, row)
 }
 
 // Single button for Keyboard.

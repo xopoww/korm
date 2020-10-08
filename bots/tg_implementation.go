@@ -195,6 +195,14 @@ func (bot *tgBot) AddCallbackHandler(action, answer string, handler func(BotHand
 	}
 }
 
+func (bot *tgBot) Debugf(f string, a ...interface{}) {
+	bot.logger.Debugf(f, a...)
+}
+
+func (bot *tgBot) Errorf(f string, a ...interface{}) {
+	bot.logger.Debugf(f, a...)
+}
+
 // ======== utils ========
 
 // Convert telegram user to *types.User
