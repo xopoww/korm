@@ -158,7 +158,7 @@ func (bot *tgBot) RegisterCommands(commands ...*Command) error {
 		return fmt.Errorf("marshal list of commands: %w", err)
 	}
 	vals := url.Values{}
-	vals.Set("commands", []string{string(data)})
+	vals.Set("commands", string(data))
 	resp, err := bot.MakeRequest("setMyCommands", vals)
 	if err != nil {
 		return fmt.Errorf("make request: %w", err)
