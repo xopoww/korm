@@ -69,10 +69,13 @@ func (bot * tgBot) processKeyboard(keyboard * Keyboard) *tg.InlineKeyboardMarkup
 			bot.callbackHandlers[id] = callbackHandler{
 				answer: button.Answer,
 				action: func(cq * tg.CallbackQuery) {
-					button.Action(bot, &CallbackQuery{
-						From:      stripTgUser(cq.From),
-						MessageID: cq.Message.MessageID,
-					})
+					if action := button.Action; action != nil {
+						action(bot, &CallbackQuery{
+							From:      stripTgUser(cq.From),
+							MessageID: cq.Message.MessageID,
+						})
+					}
+
 				},
 			}
 		}
@@ -154,7 +157,9 @@ func (bot *tgBot) RegisterCommands(commands ...*Command) error {
 	if err != nil {
 		return fmt.Errorf("marshal list of commands: %w", err)
 	}
-	resp, err := bot.MakeRequest("setMyCommands", url.Values{"commands": []string{string(data)}})
+	vals := url.Values{}
+	vals.Set("commands", []string{string(data)})
+	resp, err := bot.MakeRequest("setMyCommands", vals)
 	if err != nil {
 		return fmt.Errorf("make request: %w", err)
 	}
