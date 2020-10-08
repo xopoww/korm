@@ -10,6 +10,7 @@ import (
 )
 
 func onFoo(bot BotHandle, user * User) {
+	logger.Trace("Handling /foo.")
 	_, err := bot.SendMessage("Foo is a good command!", user, nil)
 	if err != nil {
 		logger.Errorf("Error sending message: %s", err)
@@ -25,7 +26,7 @@ func deleteOnCallback(bot BotHandle, c * CallbackQuery) {
 
 func updateOnCallback(bot BotHandle, c * CallbackQuery) {
 	msg := time.Now().String()
-	err := bot.EditMessage(c.From, c.MessageID, msg, nil)
+	err := bot.EditMessage(c.From, c.MessageID, msg, &BarKeys)
 	if err != nil {
 		logger.Errorf("Error editing a message: %s", err)
 	}
@@ -56,6 +57,7 @@ var BarKeys = &Keyboard{
 }
 
 func onBar(bot BotHandle, user * User) {
+	logger.Trace("Handling /bar.")
 	msg := time.Now().String()
 	_, err := bot.SendMessage(msg, user, BarKeys)
 	if err != nil {

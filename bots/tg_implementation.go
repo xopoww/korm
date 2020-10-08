@@ -103,6 +103,7 @@ func (bot * tgBot) Start() error {
 			// command
 			if m.IsCommand() {
 				com := m.Command()
+				bot.logger.Tracef("Got a command: %s", com)
 				if hand, found := bot.commandHandlers[com]; found {
 					hand(m)
 					continue
@@ -151,6 +152,7 @@ func (bot *tgBot) RegisterCommands(commands ...*Command) error {
 		bot.commandHandlers[com.Label] = func(m *tg.Message){
 			com.Action(bot, stripTgUser(m.From))
 		}
+		bot.logger.Tracef("Registered a command: %s", com.Label)
 	}
 
 	data, err := json.Marshal(commands)
@@ -171,23 +173,21 @@ func (bot *tgBot) RegisterCommands(commands ...*Command) error {
 
 func (bot * tgBot) EditMessage(to *User, id int, text string, keyboard **Keyboard) error {
 	var cfg tg.Chattable
-	if text == "" {
+	switch {
+	case text == "":
 		cfg = tg.NewDeleteMessage(int64(to.ID), id)
-	} else {
-		var markup *tg.InlineKeyboardMarkup
-		if keyboard != nil {
-			markup = bot.processKeyboard(*keyboard)
-		}
+	case keyboard == nil:
+		cfg = tg.NewEditMessageText(int64(to.ID), id, text)
+	default:
 		cfg = tg.EditMessageTextConfig{
 			BaseEdit:              tg.BaseEdit{
 				ChatID:          int64(to.ID),
 				MessageID:       id,
-				ReplyMarkup:     markup,
+				ReplyMarkup:     bot.processKeyboard(*keyboard),
 			},
 			Text:                  text,
 		}
 	}
-
 	_, err := bot.Send(cfg)
 	return err
 }
