@@ -163,8 +163,9 @@ func (bot * tgBot) EditMessage(to *User, id int, text string, keyboard *Keyboard
 
 func (bot *tgBot) RegisterCommands(commands ...Command) error {
 	for _, com := range commands {
+		act := com.Action
 		bot.commandHandlers[com.Label] = func(m *tg.Message){
-			com.Action(bot, stripTgUser(m.From))
+			act(bot, stripTgUser(m.From))
 		}
 		bot.logger.Tracef("Registered a command: %s", com.Label)
 	}
