@@ -9,9 +9,15 @@ import (
 	. "github.com/xopoww/korm/types"
 )
 
+func onBaz(bot BotHandle, user * User) {
+	_, err := bot.SendMessage("Just a message!", user, nil)
+	if err != nil {
+		logger.Errorf("Error sending message: %s", err)
+	}
+}
+
 func onFoo(bot BotHandle, user * User) {
-	logger.Trace("Handling /foo.")
-	_, err := bot.SendMessage("Foo is a good command!", user, nil)
+	_, err := bot.SendMessage("Here is a self-removing keyboard!", user, FooKeys)
 	if err != nil {
 		logger.Errorf("Error sending message: %s", err)
 	}
@@ -34,6 +40,13 @@ func updateOnCallback(bot BotHandle, c * CallbackQuery) {
 
 func setOnCallback(bot BotHandle, c * CallbackQuery) {
 	err := bot.EditMessage(c.From, c.MessageID, c.Argument, BarKeys)
+	if err != nil {
+		logger.Errorf("Error editing a message: %s", err)
+	}
+}
+
+func removeOnCallback(bot BotHandle, c * CallbackQuery) {
+	err := bot.EditMessage(c.From, c.MessageID, "No more keyboard!", nil)
 	if err != nil {
 		logger.Errorf("Error editing a message: %s", err)
 	}
@@ -72,8 +85,16 @@ var BarKeys = &Keyboard{
 	},
 }
 
+var FooKeys = &Keyboard{
+	keys: [][]KeyboardButton{
+		{KeyboardButton{
+			Label: "Remove keyboard",
+			Action: "remove",
+		}},
+	},
+}
+
 func onBar(bot BotHandle, user * User) {
-	logger.Trace("Handling /bar.")
 	msg := time.Now().String()
 	_, err := bot.SendMessage(msg, user, BarKeys)
 	if err != nil {
@@ -83,7 +104,7 @@ func onBar(bot BotHandle, user * User) {
 
 var (
 	fooCommand = Command{
-		Name: "just a message",
+		Name: "self-removing keyboard",
 		Label:  "foo",
 		Action: onFoo,
 	}
@@ -92,6 +113,12 @@ var (
 		Name:   "multifunctional keyboard",
 		Label:  "bar",
 		Action: onBar,
+	}
+
+	bazCommand = Command{
+		Name:	"just a message",
+		Label:	"baz",
+		Action: onBaz,
 	}
 )
 
@@ -107,7 +134,7 @@ func StartTestBots() error {
 		return fmt.Errorf("new tg bot: %w", err)
 	}
 
-	err = tbot.RegisterCommands(fooCommand, barCommand)
+	err = tbot.RegisterCommands(fooCommand, barCommand, bazCommand)
 	if err != nil {
 		return fmt.Errorf("register commands: %w", err)
 	}
@@ -116,6 +143,7 @@ func StartTestBots() error {
 	tbot.AddCallbackHandler("delete", "Deleted!", deleteOnCallback)
 	tbot.AddCallbackHandler("click", "Clack!", nil)
 	tbot.AddCallbackHandler("set", "Set!", setOnCallback)
+	tbot.AddCallbackHandler("remove", "Removed!", removeOnCallback)
 
 	return tbot.Start()
 }

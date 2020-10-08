@@ -135,7 +135,9 @@ func (bot * tgBot) Start() error {
 
 func (bot *tgBot) SendMessage(text string, to *User, keyboard *Keyboard) (int, error) {
 	message := tg.NewMessage(int64(to.ID), text)
-	message.ReplyMarkup = bot.processKeyboard(keyboard)
+	if keyboard != nil {
+		message.ReplyMarkup = bot.processKeyboard(keyboard)
+	}
 	resp, err := bot.Send(message)
 	if err != nil {
 		return 0, err
