@@ -26,7 +26,7 @@ func deleteOnCallback(bot BotHandle, c * CallbackQuery) {
 
 func updateOnCallback(bot BotHandle, c * CallbackQuery) {
 	msg := time.Now().String()
-	err := bot.EditMessage(c.From, c.MessageID, msg, nil)
+	err := bot.EditMessage(c.From, c.MessageID, msg, BarKeys)
 	if err != nil {
 		logger.Errorf("Error editing a message: %s", err)
 	}

@@ -78,6 +78,7 @@ func (bot * tgBot) processKeyboard(keyboard * Keyboard) *tg.InlineKeyboardMarkup
 
 				},
 			}
+			bot.logger.Tracef("Processed button (%s) and assigned it id %s", button.Label, id)
 		}
 	}
 	markup := tg.NewInlineKeyboardMarkup(keys...)
@@ -147,7 +148,7 @@ func (bot *tgBot) SendMessage(text string, to *User, keyboard *Keyboard) (int, e
 	return resp.MessageID, nil
 }
 
-func (bot *tgBot) RegisterCommands(commands ...*Command) error {
+func (bot *tgBot) RegisterCommands(commands ...Command) error {
 	for _, com := range commands {
 		bot.commandHandlers[com.Label] = func(m *tg.Message){
 			com.Action(bot, stripTgUser(m.From))
@@ -171,19 +172,16 @@ func (bot *tgBot) RegisterCommands(commands ...*Command) error {
 	return nil
 }
 
-func (bot * tgBot) EditMessage(to *User, id int, text string, keyboard **Keyboard) error {
+func (bot * tgBot) EditMessage(to *User, id int, text string, keyboard *Keyboard) error {
 	var cfg tg.Chattable
-	switch {
-	case text == "":
+	if text == "" {
 		cfg = tg.NewDeleteMessage(int64(to.ID), id)
-	case keyboard == nil:
-		cfg = tg.NewEditMessageText(int64(to.ID), id, text)
-	default:
+	} else {
 		cfg = tg.EditMessageTextConfig{
 			BaseEdit:              tg.BaseEdit{
 				ChatID:          int64(to.ID),
 				MessageID:       id,
-				ReplyMarkup:     bot.processKeyboard(*keyboard),
+				ReplyMarkup:     bot.processKeyboard(keyboard),
 			},
 			Text:                  text,
 		}

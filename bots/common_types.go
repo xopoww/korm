@@ -18,11 +18,10 @@ type BotHandle interface{
 
 	// Edit the message previously sent to "to".
 	// If text is an empty string, message is deleted.
-	// If keyboard is nil, the reply markup is not edited. If it is a pointer to nil, reply markup is removed.
-	EditMessage(to *User, id int, text string, keyboard **Keyboard) error
+	EditMessage(to *User, id int, text string, keyboard *Keyboard) error
 
 	// Register a set of static commands to be available for users.
-	RegisterCommands(commands ...*Command) error
+	RegisterCommands(commands ...Command) error
 }
 
 // An object that is sent to the KeyboardButton Action when the button is pressed.
