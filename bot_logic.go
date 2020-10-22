@@ -185,7 +185,7 @@ func ListOrderMock() string {
 	for id, quantity := range OrderMock {
 		dish := getDishMockByID(id)
 		msg += fmt.Sprintf("%s - %d шт.\n", dish.name, quantity)
-		price += dish.price
+		price += dish.price * quantity
 	}
 	msg += fmt.Sprintf("\nСтоимость заказа: %dр.", price)
 	return msg
@@ -258,6 +258,9 @@ func InitializeBots(handles ...bots.BotHandle) error {
 
 		bot.AddCallbackHandler("order", "",
 			func(bot bots.BotHandle, cq *bots.CallbackQuery){
+				if len(OrderMock) == 0 {
+					return
+				}
 				_ = bot.EditMessage(cq.From, cq.MessageID, "", nil)
 				_, _ = bot.SendMessage("Ваш заказ успешно оформлен! Ожидайте, наш курьер с вами свяжется.",
 					cq.From, nil)
