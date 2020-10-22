@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/xopoww/korm/bots"
-	db "github.com/xopoww/korm/database"
 	. "github.com/xopoww/korm/types"
 	"strconv"
 )
@@ -268,26 +267,26 @@ func InitializeBots(handles ...bots.BotHandle) error {
 	return nil
 }
 
-// Wrap a command handler to check if the user is in the database
-// (and add him if he is not) and populate user.UID field.
-func CheckOrAddUser(action func(bots.BotHandle, *User)) func(bots.BotHandle, *User) {
-	return func(bot bots.BotHandle, user *User) {
-		// TODO: figure out the best way to connect bot handle to database
-		vk := false
-
-		uid, err := db.CheckUser(user.ID, vk)
-		if err != nil {
-			bot.Errorf("Check user (id %d): %s", user.ID, err)
-			return
-		}
-		if uid == 0 {
-			uid, err = db.AddUser(user, vk)
-			if err != nil {
-				bot.Errorf("Add user (id %d): %s", user.ID, err)
-				return
-			}
-		}
-		user.UID = uid
-		action(bot, user)
-	}
-}
+//// Wrap a command handler to check if the user is in the database
+//// (and add him if he is not) and populate user.UID field.
+//func CheckOrAddUser(action func(bots.BotHandle, *User)) func(bots.BotHandle, *User) {
+//	return func(bot bots.BotHandle, user *User) {
+//		// TODO: figure out the best way to connect bot handle to database
+//		vk := false
+//
+//		uid, err := db.CheckUser(user.ID, vk)
+//		if err != nil {
+//			bot.Errorf("Check user (id %d): %s", user.ID, err)
+//			return
+//		}
+//		if uid == 0 {
+//			uid, err = db.AddUser(user, vk)
+//			if err != nil {
+//				bot.Errorf("Add user (id %d): %s", user.ID, err)
+//				return
+//			}
+//		}
+//		user.UID = uid
+//		action(bot, user)
+//	}
+//}
